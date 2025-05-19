@@ -1,73 +1,109 @@
-# Welcome to your Lovable project
 
-## Project info
+# StudySavvy - Smart Study Planner
 
-**URL**: https://lovable.dev/projects/3934b831-622e-47ab-9e3d-bb9c5a70fe9a
+StudySavvy is a smart study planner application that helps students organize their study time effectively. It generates a personalized timetable based on subjects, exam dates, and available hours per day.
 
-## How can I edit this code?
+## Features
 
-There are several ways of editing your application.
+- Add and manage subjects with chapters, difficulty levels, and exam dates
+- Set available study hours for each day of the week
+- Generate an optimized study plan based on subjects and available time
+- View your study plan in a calendar format
+- Track your study progress
 
-**Use Lovable**
+## Project Structure
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/3934b831-622e-47ab-9e3d-bb9c5a70fe9a) and start prompting.
+This project consists of:
+- **Frontend**: React application built with TypeScript, Tailwind CSS, and shadcn/ui components
+- **Backend**: Python Flask API for data processing and study plan generation
 
-Changes made via Lovable will be committed automatically to this repo.
+## Running Locally
 
-**Use your preferred IDE**
+### Backend Setup
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+1. Navigate to the backend directory:
+   ```
+   cd backend
+   ```
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+2. Create a virtual environment:
+   ```
+   python -m venv venv
+   source venv/bin/activate  # On Windows use: venv\Scripts\activate
+   ```
 
-Follow these steps:
+3. Install dependencies:
+   ```
+   pip install -r requirements.txt
+   ```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+4. Start the backend server:
+   ```
+   python app.py
+   ```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+The backend will run on `http://localhost:5000`.
 
-# Step 3: Install the necessary dependencies.
-npm i
+### Frontend Setup
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+1. Navigate to the frontend directory:
+   ```
+   cd frontend
+   ```
 
-**Edit a file directly in GitHub**
+2. Install dependencies:
+   ```
+   npm install
+   ```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+3. Start the development server:
+   ```
+   npm run dev
+   ```
 
-**Use GitHub Codespaces**
+The frontend will run on `http://localhost:8080`.
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Deployment
 
-## What technologies are used for this project?
+### Backend Deployment (Railway)
 
-This project is built with:
+1. Create a new project on Railway
+2. Connect your GitHub repository
+3. Add the Python environment
+4. Configure the necessary environment variables
+5. Deploy the application
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### Frontend Deployment (Netlify)
 
-## How can I deploy this project?
+1. Create a new site on Netlify
+2. Connect your GitHub repository
+3. Set build command: `npm run build`
+4. Set publish directory: `dist`
+5. Set environment variables (including your backend URL):
+   ```
+   VITE_API_BASE_URL=https://your-railway-app-url.com/api
+   ```
 
-Simply open [Lovable](https://lovable.dev/projects/3934b831-622e-47ab-9e3d-bb9c5a70fe9a) and click on Share -> Publish.
+## Technologies Used
 
-## Can I connect a custom domain to my Lovable project?
+- **Frontend**:
+  - React
+  - TypeScript
+  - Tailwind CSS
+  - shadcn/ui components
+  - react-query for data fetching
+  - date-fns for date manipulation
 
-Yes, you can!
+- **Backend**:
+  - Python
+  - Flask
+  - Flask-CORS
+  - JSON for data storage (can be upgraded to a database)
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## Future Enhancements
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+- User authentication system
+- Database integration for persistent storage
+- More sophisticated study plan algorithm
+- Mobile application
+- Email reminders for study sessions

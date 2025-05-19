@@ -1,5 +1,6 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Header from '@/components/Header';
 import SubjectForm from '@/components/SubjectForm';
 import SubjectsList from '@/components/SubjectsList';
@@ -10,10 +11,19 @@ import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 
 import { SubjectInfo, ChapterInfo, AvailableTime, StudySession, StudyPlan } from '@/types/studyPlanner';
-import { generateStudyPlan } from '@/utils/studyPlanGenerator';
+import * as api from '@/services/api';
 
 const Index = () => {
-  const [subjects, setSubjects] = useState<SubjectInfo[]>([]);
+  const queryClient = useQueryClient();
+  
+  // Fetch subjects
+  const { data: subjects = [], isLoading: isLoadingSubjects, error: subjectsError } = 
+    useQuery({
+      queryKey: ['subjects'],
+      queryFn: api.fetchSubjects,
+      refetchOnWindowFocus: false,
+    });
+  
   const [studySessions, setStudySessions] = useState<StudySession[]>([]);
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
@@ -27,38 +37,48 @@ const Index = () => {
     { day: "Sunday", hours: 4 },
   ]);
   
-  const handleAddSubject = (subject: SubjectInfo) => {
-    setSubjects([...subjects, subject]);
-    toast({
-      title: "Subject Added",
-      description: `${subject.name} with ${subject.chapters.length} chapters has been added.`,
-    });
-  };
-
-  const handleRemoveSubject = (id: string) => {
-    setSubjects(subjects.filter(subject => subject.id !== id));
-    // Also remove any sessions for this subject
-    setStudySessions(studySessions.filter(session => session.subjectId !== id));
-    toast({
-      title: "Subject Removed",
-      description: "The subject and its associated study sessions have been removed.",
-    });
-  };
-
-  const handleGeneratePlan = () => {
-    if (!startDate || !endDate || subjects.length === 0) {
+  // Add subject mutation
+  const addSubjectMutation = useMutation({
+    mutationFn: api.addSubject,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['subjects'] });
+    },
+    onError: (error) => {
+      console.error('Error adding subject:', error);
       toast({
-        title: "Cannot Generate Plan",
-        description: "Please add at least one subject and select start/end dates.",
+        title: "Error",
+        description: "Failed to add subject. Please try again.",
         variant: "destructive"
       });
-      return;
     }
-
-    try {
-      const plan = generateStudyPlan(subjects, availableTimes, startDate, endDate);
+  });
+  
+  // Remove subject mutation
+  const removeSubjectMutation = useMutation({
+    mutationFn: api.removeSubject,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['subjects'] });
+    },
+    onError: (error) => {
+      console.error('Error removing subject:', error);
+      toast({
+        title: "Error",
+        description: "Failed to remove subject. Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
+  
+  // Generate plan mutation
+  const generatePlanMutation = useMutation({
+    mutationFn: () => {
+      if (!startDate || !endDate || subjects.length === 0) {
+        throw new Error("Missing required data");
+      }
+      return api.generateStudyPlan(subjects, availableTimes, startDate, endDate);
+    },
+    onSuccess: (plan) => {
       setStudySessions(plan.sessions);
-      
       toast({
         title: "Study Plan Generated",
         description: `Your personalized study plan with ${plan.sessions.length} sessions has been created.`,
@@ -71,7 +91,8 @@ const Index = () => {
           calendarElement.scrollIntoView({ behavior: 'smooth' });
         }
       }, 500);
-    } catch (error) {
+    },
+    onError: (error) => {
       console.error("Error generating plan:", error);
       toast({
         title: "Error",
@@ -79,16 +100,59 @@ const Index = () => {
         variant: "destructive"
       });
     }
+  });
+  
+  // Update session mutation
+  const updateSessionMutation = useMutation({
+    mutationFn: ({ sessionId, updates }: { sessionId: string; updates: Partial<StudySession> }) => 
+      api.updateStudySession(sessionId, updates),
+    onSuccess: (updatedSession) => {
+      setStudySessions(prevSessions => 
+        prevSessions.map(session => 
+          session.id === updatedSession.id ? updatedSession : session
+        )
+      );
+    },
+    onError: (error) => {
+      console.error("Error updating session:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update study session. Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
+  
+  const handleAddSubject = (subject: SubjectInfo) => {
+    addSubjectMutation.mutate(subject);
+    toast({
+      title: "Subject Added",
+      description: `${subject.name} with ${subject.chapters.length} chapters has been added.`,
+    });
+  };
+
+  const handleRemoveSubject = (id: string) => {
+    removeSubjectMutation.mutate(id);
+    // Also remove any sessions for this subject
+    setStudySessions(studySessions.filter(session => session.subjectId !== id));
+    toast({
+      title: "Subject Removed",
+      description: "The subject and its associated study sessions have been removed.",
+    });
+  };
+
+  const handleGeneratePlan = () => {
+    generatePlanMutation.mutate();
   };
 
   const handleToggleSessionCompleted = (sessionId: string) => {
-    setStudySessions(sessions => 
-      sessions.map(session => 
-        session.id === sessionId 
-          ? { ...session, completed: !session.completed } 
-          : session
-      )
-    );
+    const session = studySessions.find(s => s.id === sessionId);
+    if (session) {
+      updateSessionMutation.mutate({
+        sessionId,
+        updates: { completed: !session.completed }
+      });
+    }
   };
 
   const totalStudyHours = subjects.reduce((total, subject) => {
@@ -96,6 +160,30 @@ const Index = () => {
       return chapterTotal + chapter.estimatedHours;
     }, 0);
   }, 0);
+
+  // Show loading state
+  if (isLoadingSubjects) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-study-primary"></div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (subjectsError) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center">
+        <p className="text-red-500 mb-4">Error loading subjects. Please try again later.</p>
+        <Button 
+          onClick={() => queryClient.invalidateQueries({ queryKey: ['subjects'] })}
+          variant="outline"
+        >
+          Retry
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-study-light to-white">
@@ -126,7 +214,7 @@ const Index = () => {
               endDate={endDate}
               setEndDate={setEndDate}
               onGeneratePlan={handleGeneratePlan}
-              disableGenerate={subjects.length === 0}
+              disableGenerate={subjects.length === 0 || generatePlanMutation.isPending}
             />
           </div>
         )}
