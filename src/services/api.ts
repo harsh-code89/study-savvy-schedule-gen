@@ -3,7 +3,7 @@ import { SubjectInfo, StudyPlan, StudySession } from "@/types/studyPlanner";
 
 // Set this to your deployed backend URL when in production
 const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://your-backend-url.com/api'  // Replace with your actual deployed backend URL
+  ? process.env.VITE_API_BASE_URL || 'https://studysavvy-backend.up.railway.app/api'
   : 'http://localhost:5000/api';
 
 // API functions for subjects
