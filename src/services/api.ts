@@ -1,4 +1,3 @@
-
 import { SubjectInfo, StudyPlan, StudySession } from "@/types/studyPlanner";
 
 // Set this to your deployed backend URL when in production
@@ -8,27 +7,39 @@ const API_BASE_URL = process.env.NODE_ENV === 'production'
 
 // API functions for subjects
 export const fetchSubjects = async (): Promise<SubjectInfo[]> => {
-  const response = await fetch(`${API_BASE_URL}/subjects`);
-  if (!response.ok) {
-    throw new Error('Failed to fetch subjects');
+  try {
+    const response = await fetch(`${API_BASE_URL}/subjects`);
+    if (!response.ok) {
+      console.error('Failed to fetch subjects', response.status, response.statusText);
+      return []; // Return empty array instead of throwing to prevent app from crashing
+    }
+    return response.json();
+  } catch (error) {
+    console.error('Error fetching subjects:', error);
+    return []; // Return empty array on error to prevent app from crashing
   }
-  return response.json();
 };
 
 export const addSubject = async (subject: SubjectInfo): Promise<SubjectInfo> => {
-  const response = await fetch(`${API_BASE_URL}/subjects`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(subject),
-  });
-  
-  if (!response.ok) {
-    throw new Error('Failed to add subject');
+  try {
+    const response = await fetch(`${API_BASE_URL}/subjects`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(subject),
+    });
+    
+    if (!response.ok) {
+      console.error('Failed to add subject', response.status, response.statusText);
+      throw new Error('Failed to add subject');
+    }
+    
+    return response.json();
+  } catch (error) {
+    console.error('Error adding subject:', error);
+    throw error;
   }
-  
-  return response.json();
 };
 
 export const removeSubject = async (subjectId: string): Promise<void> => {
@@ -48,24 +59,30 @@ export const generateStudyPlan = async (
   startDate: Date,
   endDate: Date
 ): Promise<StudyPlan> => {
-  const response = await fetch(`${API_BASE_URL}/study-plan`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      subjects,
-      availableTimes,
-      startDate: startDate.toISOString(),
-      endDate: endDate.toISOString(),
-    }),
-  });
-  
-  if (!response.ok) {
-    throw new Error('Failed to generate study plan');
+  try {
+    const response = await fetch(`${API_BASE_URL}/study-plan`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        subjects,
+        availableTimes,
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+      }),
+    });
+    
+    if (!response.ok) {
+      console.error('Failed to generate study plan', response.status, response.statusText);
+      throw new Error('Failed to generate study plan');
+    }
+    
+    return response.json();
+  } catch (error) {
+    console.error('Error generating study plan:', error);
+    throw error;
   }
-  
-  return response.json();
 };
 
 export const updateStudySession = async (

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Header from '@/components/Header';
@@ -16,12 +15,13 @@ import * as api from '@/services/api';
 const Index = () => {
   const queryClient = useQueryClient();
   
-  // Fetch subjects
-  const { data: subjects = [], isLoading: isLoadingSubjects, error: subjectsError } = 
+  // Fetch subjects with error handling
+  const { data: subjects = [], isLoading: isLoadingSubjects, error: subjectsError, isError } = 
     useQuery({
       queryKey: ['subjects'],
       queryFn: api.fetchSubjects,
       refetchOnWindowFocus: false,
+      retry: 1,
     });
   
   const [studySessions, setStudySessions] = useState<StudySession[]>([]);
@@ -161,26 +161,11 @@ const Index = () => {
     }, 0);
   }, 0);
 
-  // Show loading state
+  // Show simplified loading state to ensure UI always renders
   if (isLoadingSubjects) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-study-primary"></div>
-      </div>
-    );
-  }
-
-  // Show error state
-  if (subjectsError) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center">
-        <p className="text-red-500 mb-4">Error loading subjects. Please try again later.</p>
-        <Button 
-          onClick={() => queryClient.invalidateQueries({ queryKey: ['subjects'] })}
-          variant="outline"
-        >
-          Retry
-        </Button>
       </div>
     );
   }
@@ -197,6 +182,19 @@ const Index = () => {
           <p className="text-lg text-gray-600">
             Your personalized study plan generator to help you prepare effectively for exams
           </p>
+          
+          {isError && (
+            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-600">
+              <p>Unable to connect to the backend server. The app is running in offline mode.</p>
+              <Button 
+                onClick={() => queryClient.invalidateQueries({ queryKey: ['subjects'] })}
+                variant="outline"
+                className="mt-2"
+              >
+                Retry Connection
+              </Button>
+            </div>
+          )}
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
