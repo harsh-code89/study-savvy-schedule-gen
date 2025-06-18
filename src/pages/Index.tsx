@@ -15,6 +15,7 @@ import SubjectsList from '@/components/SubjectsList';
 import TimeAllocationForm from '@/components/TimeAllocationForm';
 import StudyCalendar from '@/components/StudyCalendar';
 import ProgressSummary from '@/components/ProgressSummary';
+import { StudySession } from '@/types/studyPlanner';
 
 const Index = () => {
   const [user, setUser] = useState<any>(null);
@@ -23,6 +24,7 @@ const Index = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [showSubjectForm, setShowSubjectForm] = useState(false);
   const [subjects, setSubjects] = useState<any[]>([]);
+  const [sessions, setSessions] = useState<StudySession[]>([]);
   const [activeTab, setActiveTab] = useState('overview');
   const { toast } = useToast();
 
@@ -41,6 +43,11 @@ const Index = () => {
     if (savedSubjects) {
       setSubjects(JSON.parse(savedSubjects));
     }
+
+    const savedSessions = localStorage.getItem('studysavvy_sessions');
+    if (savedSessions) {
+      setSessions(JSON.parse(savedSessions));
+    }
   }, []);
 
   const handleLogin = () => {
@@ -50,8 +57,10 @@ const Index = () => {
   const handleLogout = () => {
     localStorage.removeItem('studysavvy_user');
     localStorage.removeItem('studysavvy_subjects');
+    localStorage.removeItem('studysavvy_sessions');
     setUser(null);
     setSubjects([]);
+    setSessions([]);
     toast({
       title: "Logged out successfully",
       description: "You have been logged out of StudySavvy."
@@ -80,7 +89,7 @@ const Index = () => {
   };
 
   const handleSubjectAdded = (subject: any) => {
-    const updatedSubjects = [...subjects, { ...subject, id: Date.now() }];
+    const updatedSubjects = [...subjects, { ...subject, id: Date.now().toString() }];
     setSubjects(updatedSubjects);
     localStorage.setItem('studysavvy_subjects', JSON.stringify(updatedSubjects));
     setShowSubjectForm(false);
@@ -88,6 +97,30 @@ const Index = () => {
       title: "Subject added!",
       description: `${subject.name} has been added to your study plan.`
     });
+  };
+
+  const handleRemoveSubject = (id: string) => {
+    const updatedSubjects = subjects.filter(subject => subject.id !== id);
+    setSubjects(updatedSubjects);
+    localStorage.setItem('studysavvy_subjects', JSON.stringify(updatedSubjects));
+    
+    // Also remove related sessions
+    const updatedSessions = sessions.filter(session => session.subjectId !== id);
+    setSessions(updatedSessions);
+    localStorage.setItem('studysavvy_sessions', JSON.stringify(updatedSessions));
+    
+    toast({
+      title: "Subject removed!",
+      description: "Subject and related sessions have been removed."
+    });
+  };
+
+  const handleToggleSessionCompleted = (sessionId: string) => {
+    const updatedSessions = sessions.map(session =>
+      session.id === sessionId ? { ...session, completed: !session.completed } : session
+    );
+    setSessions(updatedSessions);
+    localStorage.setItem('studysavvy_sessions', JSON.stringify(updatedSessions));
   };
 
   if (!user) {
@@ -302,17 +335,23 @@ const Index = () => {
                 Add Subject
               </Button>
             </div>
-            <SubjectsList subjects={subjects} />
+            <SubjectsList subjects={subjects} onRemoveSubject={handleRemoveSubject} />
           </TabsContent>
 
           <TabsContent value="schedule" className="space-y-6">
             <h3 className="text-xl font-semibold text-gray-800">Study Calendar</h3>
-            <StudyCalendar subjects={subjects} />
+            <StudyCalendar 
+              subjects={subjects} 
+              sessions={sessions}
+              startDate={new Date()}
+              endDate={new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)} // 30 days from now
+              onToggleSessionCompleted={handleToggleSessionCompleted}
+            />
           </TabsContent>
 
           <TabsContent value="progress" className="space-y-6">
             <h3 className="text-xl font-semibold text-gray-800">Progress Overview</h3>
-            <ProgressSummary subjects={subjects} />
+            <ProgressSummary subjects={subjects} sessions={sessions} />
           </TabsContent>
         </Tabs>
       </div>
@@ -336,7 +375,7 @@ const Index = () => {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
             <h3 className="text-lg font-semibold mb-4">Add New Subject</h3>
-            <SubjectForm onSubmit={handleSubjectAdded} />
+            <SubjectForm onSubjectAdd={handleSubjectAdded} />
             <Button
               variant="outline"
               onClick={() => setShowSubjectForm(false)}
