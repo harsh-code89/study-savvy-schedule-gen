@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Header from '@/components/Header';
@@ -42,6 +43,10 @@ const Index = () => {
     mutationFn: api.addSubject,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subjects'] });
+      toast({
+        title: "Subject Added Successfully",
+        description: "Your subject has been added and is ready for planning.",
+      });
     },
     onError: (error) => {
       console.error('Error adding subject:', error);
@@ -58,6 +63,10 @@ const Index = () => {
     mutationFn: api.removeSubject,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subjects'] });
+      toast({
+        title: "Subject Removed",
+        description: "The subject has been successfully removed.",
+      });
     },
     onError: (error) => {
       console.error('Error removing subject:', error);
@@ -125,20 +134,12 @@ const Index = () => {
   
   const handleAddSubject = (subject: SubjectInfo) => {
     addSubjectMutation.mutate(subject);
-    toast({
-      title: "Subject Added",
-      description: `${subject.name} with ${subject.chapters.length} chapters has been added.`,
-    });
   };
 
   const handleRemoveSubject = (id: string) => {
     removeSubjectMutation.mutate(id);
     // Also remove any sessions for this subject
     setStudySessions(studySessions.filter(session => session.subjectId !== id));
-    toast({
-      title: "Subject Removed",
-      description: "The subject and its associated study sessions have been removed.",
-    });
   };
 
   const handleGeneratePlan = () => {
@@ -182,19 +183,6 @@ const Index = () => {
           <p className="text-lg text-gray-600">
             Your personalized study plan generator to help you prepare effectively for exams
           </p>
-          
-          {isError && (
-            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-600">
-              <p>Unable to connect to the backend server. The app is running in offline mode.</p>
-              <Button 
-                onClick={() => queryClient.invalidateQueries({ queryKey: ['subjects'] })}
-                variant="outline"
-                className="mt-2"
-              >
-                Retry Connection
-              </Button>
-            </div>
-          )}
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
