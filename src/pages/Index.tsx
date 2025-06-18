@@ -1,257 +1,352 @@
 
 import React, { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import Header from '@/components/Header';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { BookOpen, Calendar, Target, TrendingUp, Settings, LogOut, User, Plus } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import AuthModal from '@/components/auth/AuthModal';
+import ProfileSetup from '@/components/profile/ProfileSetup';
+import SettingsModal from '@/components/settings/SettingsModal';
 import SubjectForm from '@/components/SubjectForm';
 import SubjectsList from '@/components/SubjectsList';
 import TimeAllocationForm from '@/components/TimeAllocationForm';
 import StudyCalendar from '@/components/StudyCalendar';
 import ProgressSummary from '@/components/ProgressSummary';
-import { Button } from '@/components/ui/button';
-import { toast } from '@/hooks/use-toast';
-
-import { SubjectInfo, ChapterInfo, AvailableTime, StudySession, StudyPlan } from '@/types/studyPlanner';
-import * as api from '@/services/api';
 
 const Index = () => {
-  const queryClient = useQueryClient();
-  
-  // Fetch subjects with error handling
-  const { data: subjects = [], isLoading: isLoadingSubjects, error: subjectsError, isError } = 
-    useQuery({
-      queryKey: ['subjects'],
-      queryFn: api.fetchSubjects,
-      refetchOnWindowFocus: false,
-      retry: 1,
-    });
-  
-  const [studySessions, setStudySessions] = useState<StudySession[]>([]);
-  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
-  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
-  const [availableTimes, setAvailableTimes] = useState<AvailableTime[]>([
-    { day: "Monday", hours: 2 },
-    { day: "Tuesday", hours: 2 },
-    { day: "Wednesday", hours: 2 },
-    { day: "Thursday", hours: 2 },
-    { day: "Friday", hours: 2 },
-    { day: "Saturday", hours: 4 },
-    { day: "Sunday", hours: 4 },
-  ]);
-  
-  // Add subject mutation
-  const addSubjectMutation = useMutation({
-    mutationFn: api.addSubject,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['subjects'] });
-      toast({
-        title: "Subject Added Successfully",
-        description: "Your subject has been added and is ready for planning.",
-      });
-    },
-    onError: (error) => {
-      console.error('Error adding subject:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add subject. Please try again.",
-        variant: "destructive"
-      });
-    }
-  });
-  
-  // Remove subject mutation
-  const removeSubjectMutation = useMutation({
-    mutationFn: api.removeSubject,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['subjects'] });
-      toast({
-        title: "Subject Removed",
-        description: "The subject has been successfully removed.",
-      });
-    },
-    onError: (error) => {
-      console.error('Error removing subject:', error);
-      toast({
-        title: "Error",
-        description: "Failed to remove subject. Please try again.",
-        variant: "destructive"
-      });
-    }
-  });
-  
-  // Generate plan mutation
-  const generatePlanMutation = useMutation({
-    mutationFn: () => {
-      if (!startDate || !endDate || subjects.length === 0) {
-        throw new Error("Missing required data");
-      }
-      return api.generateStudyPlan(subjects, availableTimes, startDate, endDate);
-    },
-    onSuccess: (plan) => {
-      setStudySessions(plan.sessions);
-      toast({
-        title: "Study Plan Generated",
-        description: `Your personalized study plan with ${plan.sessions.length} sessions has been created.`,
-      });
+  const [user, setUser] = useState<any>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showProfileSetup, setShowProfileSetup] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showSubjectForm, setShowSubjectForm] = useState(false);
+  const [subjects, setSubjects] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState('overview');
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const savedUser = localStorage.getItem('studysavvy_user');
+    if (savedUser) {
+      const parsedUser = JSON.parse(savedUser);
+      setUser(parsedUser);
       
-      setTimeout(() => {
-        // Scroll to calendar
-        const calendarElement = document.getElementById('study-calendar');
-        if (calendarElement) {
-          calendarElement.scrollIntoView({ behavior: 'smooth' });
-        }
-      }, 500);
-    },
-    onError: (error) => {
-      console.error("Error generating plan:", error);
-      toast({
-        title: "Error",
-        description: "There was an error generating your study plan. Please try again.",
-        variant: "destructive"
-      });
+      if (!parsedUser.profileComplete) {
+        setShowProfileSetup(true);
+      }
     }
-  });
-  
-  // Update session mutation
-  const updateSessionMutation = useMutation({
-    mutationFn: ({ sessionId, updates }: { sessionId: string; updates: Partial<StudySession> }) => 
-      api.updateStudySession(sessionId, updates),
-    onSuccess: (updatedSession) => {
-      setStudySessions(prevSessions => 
-        prevSessions.map(session => 
-          session.id === updatedSession.id ? updatedSession : session
-        )
-      );
-    },
-    onError: (error) => {
-      console.error("Error updating session:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update study session. Please try again.",
-        variant: "destructive"
-      });
+
+    const savedSubjects = localStorage.getItem('studysavvy_subjects');
+    if (savedSubjects) {
+      setSubjects(JSON.parse(savedSubjects));
     }
-  });
-  
-  const handleAddSubject = (subject: SubjectInfo) => {
-    addSubjectMutation.mutate(subject);
+  }, []);
+
+  const handleLogin = () => {
+    setShowAuthModal(true);
   };
 
-  const handleRemoveSubject = (id: string) => {
-    removeSubjectMutation.mutate(id);
-    // Also remove any sessions for this subject
-    setStudySessions(studySessions.filter(session => session.subjectId !== id));
+  const handleLogout = () => {
+    localStorage.removeItem('studysavvy_user');
+    localStorage.removeItem('studysavvy_subjects');
+    setUser(null);
+    setSubjects([]);
+    toast({
+      title: "Logged out successfully",
+      description: "You have been logged out of StudySavvy."
+    });
   };
 
-  const handleGeneratePlan = () => {
-    generatePlanMutation.mutate();
-  };
-
-  const handleToggleSessionCompleted = (sessionId: string) => {
-    const session = studySessions.find(s => s.id === sessionId);
-    if (session) {
-      updateSessionMutation.mutate({
-        sessionId,
-        updates: { completed: !session.completed }
-      });
+  const handleAuthSuccess = (userData: any) => {
+    setUser(userData);
+    setShowAuthModal(false);
+    if (!userData.profileComplete) {
+      setShowProfileSetup(true);
     }
+    toast({
+      title: "Welcome to StudySavvy!",
+      description: `Hello ${userData.name}, let's start your study journey.`
+    });
   };
 
-  const totalStudyHours = subjects.reduce((total, subject) => {
-    return total + subject.chapters.reduce((chapterTotal, chapter) => {
-      return chapterTotal + chapter.estimatedHours;
-    }, 0);
-  }, 0);
+  const handleProfileComplete = (profileData: any) => {
+    setUser(profileData);
+    setShowProfileSetup(false);
+    toast({
+      title: "Profile completed!",
+      description: "Your profile has been set up successfully."
+    });
+  };
 
-  // Show simplified loading state to ensure UI always renders
-  if (isLoadingSubjects) {
+  const handleSubjectAdded = (subject: any) => {
+    const updatedSubjects = [...subjects, { ...subject, id: Date.now() }];
+    setSubjects(updatedSubjects);
+    localStorage.setItem('studysavvy_subjects', JSON.stringify(updatedSubjects));
+    setShowSubjectForm(false);
+    toast({
+      title: "Subject added!",
+      description: `${subject.name} has been added to your study plan.`
+    });
+  };
+
+  if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-study-primary"></div>
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-indigo-50 to-blue-50">
+        <div className="container mx-auto px-4 py-16">
+          <div className="text-center mb-12">
+            <div className="flex items-center justify-center gap-3 mb-6">
+              <BookOpen className="h-12 w-12 text-purple-600" />
+              <h1 className="text-5xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                StudySavvy
+              </h1>
+            </div>
+            <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+              Transform your study routine with AI-powered planning and personalized learning paths. 
+              Master your subjects, track your progress, and achieve your academic goals.
+            </p>
+            <div className="flex gap-4 justify-center">
+              <Button 
+                onClick={handleLogin}
+                className="bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white px-8 py-3 text-lg shadow-lg hover:shadow-xl transition-all duration-300"
+              >
+                Get Started
+              </Button>
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            <Card className="border-none shadow-lg bg-white/80 backdrop-blur-sm hover:shadow-xl transition-all duration-300">
+              <CardHeader className="text-center">
+                <div className="mx-auto mb-4 p-3 bg-gradient-to-r from-purple-100 to-indigo-100 rounded-full w-fit">
+                  <Target className="h-8 w-8 text-purple-600" />
+                </div>
+                <CardTitle className="text-xl">Smart Planning</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600 text-center">
+                  AI-powered study plans tailored to your learning style and schedule
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-none shadow-lg bg-white/80 backdrop-blur-sm hover:shadow-xl transition-all duration-300">
+              <CardHeader className="text-center">
+                <div className="mx-auto mb-4 p-3 bg-gradient-to-r from-purple-100 to-indigo-100 rounded-full w-fit">
+                  <TrendingUp className="h-8 w-8 text-purple-600" />
+                </div>
+                <CardTitle className="text-xl">Progress Tracking</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600 text-center">
+                  Monitor your learning progress with detailed analytics and insights
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-none shadow-lg bg-white/80 backdrop-blur-sm hover:shadow-xl transition-all duration-300">
+              <CardHeader className="text-center">
+                <div className="mx-auto mb-4 p-3 bg-gradient-to-r from-purple-100 to-indigo-100 rounded-full w-fit">
+                  <Calendar className="h-8 w-8 text-purple-600" />
+                </div>
+                <CardTitle className="text-xl">Flexible Scheduling</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600 text-center">
+                  Adaptive scheduling that fits your lifestyle and commitments
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        <AuthModal 
+          isOpen={showAuthModal}
+          onClose={() => setShowAuthModal(false)}
+          onAuthSuccess={handleAuthSuccess}
+        />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-study-light to-white">
-      <Header />
-      
-      <main className="container mx-auto px-4 pb-16">
-        <div className="text-center mb-10 max-w-2xl mx-auto">
-          <h1 className="text-4xl font-bold mb-4">
-            <span className="gradient-heading">Study Savvy</span>
-          </h1>
-          <p className="text-lg text-gray-600">
-            Your personalized study plan generator to help you prepare effectively for exams
-          </p>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <SubjectForm onAddSubject={handleAddSubject} />
-          <SubjectsList subjects={subjects} onRemoveSubject={handleRemoveSubject} />
-        </div>
-        
-        {subjects.length > 0 && (
-          <div className="mt-8">
-            <TimeAllocationForm
-              availableTimes={availableTimes}
-              setAvailableTimes={setAvailableTimes}
-              startDate={startDate}
-              setStartDate={setStartDate}
-              endDate={endDate}
-              setEndDate={setEndDate}
-              onGeneratePlan={handleGeneratePlan}
-              disableGenerate={subjects.length === 0 || generatePlanMutation.isPending}
-            />
-          </div>
-        )}
-        
-        <div className="mt-8" id="study-calendar">
-          <StudyCalendar
-            subjects={subjects}
-            sessions={studySessions}
-            startDate={startDate}
-            endDate={endDate}
-            onToggleSessionCompleted={handleToggleSessionCompleted}
-          />
-        </div>
-        
-        {studySessions.length > 0 && (
-          <div className="mt-8">
-            <ProgressSummary subjects={subjects} sessions={studySessions} />
-          </div>
-        )}
-        
-        {/* Statistics and summary */}
-        {subjects.length > 0 && (
-          <div className="mt-12 glass-card p-6 rounded-lg text-center">
-            <h3 className="font-bold text-xl mb-4 gradient-heading">Your Study Plan Summary</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-white p-4 rounded-lg shadow-sm">
-                <div className="text-4xl font-bold text-study-primary">{subjects.length}</div>
-                <div className="text-gray-500 mt-1">Subjects</div>
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-indigo-50 to-blue-50">
+      {/* Header */}
+      <header className="bg-white/80 backdrop-blur-sm border-b border-purple-100 sticky top-0 z-40">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <BookOpen className="h-8 w-8 text-purple-600" />
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                StudySavvy
+              </h1>
+            </div>
+            
+            <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowSettings(true)}
+                className="text-gray-600 hover:text-purple-600"
+              >
+                <Settings className="h-4 w-4 mr-2" />
+                Settings
+              </Button>
+              
+              <div className="flex items-center gap-2">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={user?.avatar} />
+                  <AvatarFallback className="bg-gradient-to-r from-purple-400 to-indigo-400 text-white">
+                    {user?.name?.charAt(0) || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="text-sm font-medium text-gray-700">
+                  {user?.name}
+                </span>
               </div>
-              <div className="bg-white p-4 rounded-lg shadow-sm">
-                <div className="text-4xl font-bold text-study-primary">
-                  {subjects.reduce((sum, subject) => sum + subject.chapters.length, 0)}
-                </div>
-                <div className="text-gray-500 mt-1">Chapters</div>
-              </div>
-              <div className="bg-white p-4 rounded-lg shadow-sm">
-                <div className="text-4xl font-bold text-study-primary">
-                  {totalStudyHours}
-                </div>
-                <div className="text-gray-500 mt-1">Total Hours</div>
-              </div>
-              <div className="bg-white p-4 rounded-lg shadow-sm">
-                <div className="text-4xl font-bold text-study-primary">
-                  {studySessions.length}
-                </div>
-                <div className="text-gray-500 mt-1">Study Sessions</div>
-              </div>
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleLogout}
+                className="text-gray-600 hover:text-red-600"
+              >
+                <LogOut className="h-4 w-4" />
+              </Button>
             </div>
           </div>
-        )}
-      </main>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-8">
+          <h2 className="text-3xl font-bold text-gray-800 mb-2">
+            Welcome back, {user?.name}! 👋
+          </h2>
+          <p className="text-gray-600">
+            Let's continue your learning journey
+          </p>
+        </div>
+
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4 bg-white/50 backdrop-blur-sm">
+            <TabsTrigger value="overview" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-indigo-500 data-[state=active]:text-white">
+              Overview
+            </TabsTrigger>
+            <TabsTrigger value="subjects" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-indigo-500 data-[state=active]:text-white">
+              Subjects
+            </TabsTrigger>
+            <TabsTrigger value="schedule" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-indigo-500 data-[state=active]:text-white">
+              Schedule
+            </TabsTrigger>
+            <TabsTrigger value="progress" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-indigo-500 data-[state=active]:text-white">
+              Progress
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview" className="space-y-6">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <Card className="border-none shadow-lg bg-white/80 backdrop-blur-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BookOpen className="h-5 w-5 text-purple-600" />
+                    Total Subjects
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-purple-600">
+                    {subjects.length}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-none shadow-lg bg-white/80 backdrop-blur-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Target className="h-5 w-5 text-indigo-600" />
+                    Study Goals
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-gray-600">
+                    {user?.studyGoals || 'Complete your profile to set goals'}
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="border-none shadow-lg bg-white/80 backdrop-blur-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Calendar className="h-5 w-5 text-green-600" />
+                    Study Time
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-gray-600">
+                    {user?.preferredStudyTime || 'Not set'}
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="subjects" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h3 className="text-xl font-semibold text-gray-800">Your Subjects</h3>
+              <Button
+                onClick={() => setShowSubjectForm(true)}
+                className="bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Subject
+              </Button>
+            </div>
+            <SubjectsList subjects={subjects} />
+          </TabsContent>
+
+          <TabsContent value="schedule" className="space-y-6">
+            <h3 className="text-xl font-semibold text-gray-800">Study Calendar</h3>
+            <StudyCalendar subjects={subjects} />
+          </TabsContent>
+
+          <TabsContent value="progress" className="space-y-6">
+            <h3 className="text-xl font-semibold text-gray-800">Progress Overview</h3>
+            <ProgressSummary subjects={subjects} />
+          </TabsContent>
+        </Tabs>
+      </div>
+
+      {/* Modals */}
+      <ProfileSetup
+        isOpen={showProfileSetup}
+        onClose={() => setShowProfileSetup(false)}
+        user={user}
+        onProfileComplete={handleProfileComplete}
+      />
+
+      <SettingsModal
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
+        user={user}
+        onUserUpdate={setUser}
+      />
+
+      {showSubjectForm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-4">Add New Subject</h3>
+            <SubjectForm onSubmit={handleSubjectAdded} />
+            <Button
+              variant="outline"
+              onClick={() => setShowSubjectForm(false)}
+              className="mt-4 w-full"
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
