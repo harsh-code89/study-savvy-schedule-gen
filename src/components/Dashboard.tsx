@@ -3,7 +3,14 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { BookOpen, Settings, LogOut } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { BookOpen, Settings, LogOut, User, ChevronDown } from 'lucide-react';
 import DashboardTabs from '@/components/DashboardTabs';
 import ProfileSetup from '@/components/profile/ProfileSetup';
 import SettingsModal from '@/components/settings/SettingsModal';
@@ -69,36 +76,43 @@ const Dashboard: React.FC<DashboardProps> = ({
             </div>
             
             <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onShowSettings}
-                className="text-gray-600 hover:text-purple-600"
-              >
-                <Settings className="h-4 w-4 mr-2" />
-                Settings
-              </Button>
-              
-              <div className="flex items-center gap-2">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={user?.avatar} />
-                  <AvatarFallback className="bg-gradient-to-r from-purple-400 to-indigo-400 text-white">
-                    {user?.name?.charAt(0) || 'U'}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="text-sm font-medium text-gray-700">
-                  {user?.name}
-                </span>
-              </div>
-              
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onLogout}
-                className="text-gray-600 hover:text-red-600"
-              >
-                <LogOut className="h-4 w-4" />
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="flex items-center gap-2 hover:bg-purple-50 px-3 py-2">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={user?.avatar} />
+                      <AvatarFallback className="bg-gradient-to-r from-purple-400 to-indigo-400 text-white">
+                        {user?.name?.charAt(0) || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="text-sm font-medium text-gray-700">
+                      {user?.name}
+                    </span>
+                    <ChevronDown className="h-4 w-4 text-gray-500" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56 bg-white border border-gray-200 shadow-lg">
+                  <DropdownMenuItem className="flex items-center gap-2 cursor-pointer hover:bg-purple-50">
+                    <User className="h-4 w-4 text-purple-600" />
+                    <span>Profile</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    className="flex items-center gap-2 cursor-pointer hover:bg-purple-50"
+                    onClick={onShowSettings}
+                  >
+                    <Settings className="h-4 w-4 text-purple-600" />
+                    <span>Settings</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    className="flex items-center gap-2 cursor-pointer hover:bg-red-50 text-red-600"
+                    onClick={onLogout}
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span>Logout</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </div>
