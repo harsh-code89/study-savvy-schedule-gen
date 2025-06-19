@@ -2,6 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { BookOpen, Settings, LogOut } from 'lucide-react';
 import DashboardTabs from '@/components/DashboardTabs';
 import ProfileSetup from '@/components/profile/ProfileSetup';
@@ -141,16 +142,30 @@ const Dashboard: React.FC<DashboardProps> = ({
 
       {showSubjectForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-4">Add New Subject</h3>
-            <SubjectForm onAddSubject={onSubjectAdded} />
-            <Button
-              variant="outline"
-              onClick={onCloseSubjectForm}
-              className="mt-4 w-full"
-            >
-              Cancel
-            </Button>
+          <div className="bg-white rounded-lg w-full max-w-md max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between p-6 border-b">
+              <h3 className="text-lg font-semibold">Add New Subject</h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onCloseSubjectForm}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                ×
+              </Button>
+            </div>
+            <ScrollArea className="flex-1 p-6">
+              <SubjectForm onAddSubject={onSubjectAdded} />
+            </ScrollArea>
+            <div className="p-6 border-t">
+              <Button
+                variant="outline"
+                onClick={onCloseSubjectForm}
+                className="w-full"
+              >
+                Cancel
+              </Button>
+            </div>
           </div>
         </div>
       )}
