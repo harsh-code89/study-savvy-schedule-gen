@@ -53,6 +53,8 @@ const Dashboard: React.FC<DashboardProps> = ({
   onRemoveSubject,
   onToggleSessionCompleted
 }) => {
+  console.log('Dashboard showSubjectForm:', showSubjectForm);
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-indigo-50 to-blue-50">
       {/* Header */}
@@ -142,22 +144,26 @@ const Dashboard: React.FC<DashboardProps> = ({
 
       {showSubjectForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg w-full max-w-md max-h-[90vh] flex flex-col">
-            <div className="flex items-center justify-between p-6 border-b">
+          <div className="bg-white rounded-lg w-full max-w-md max-h-[85vh] flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b flex-shrink-0">
               <h3 className="text-lg font-semibold">Add New Subject</h3>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={onCloseSubjectForm}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-400 hover:text-gray-600 h-8 w-8 p-0"
               >
                 ×
               </Button>
             </div>
-            <ScrollArea className="flex-1 p-6">
-              <SubjectForm onAddSubject={onSubjectAdded} />
-            </ScrollArea>
-            <div className="p-6 border-t">
+            <div className="flex-1 overflow-hidden">
+              <ScrollArea className="h-full">
+                <div className="p-4">
+                  <SubjectForm onAddSubject={onSubjectAdded} />
+                </div>
+              </ScrollArea>
+            </div>
+            <div className="p-4 border-t flex-shrink-0">
               <Button
                 variant="outline"
                 onClick={onCloseSubjectForm}
