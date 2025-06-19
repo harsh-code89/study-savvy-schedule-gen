@@ -144,9 +144,9 @@ const Dashboard: React.FC<DashboardProps> = ({
 
       {showSubjectForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg w-full max-w-md max-h-[85vh] flex flex-col overflow-hidden">
-            <div className="flex items-center justify-between p-4 border-b flex-shrink-0">
-              <h3 className="text-lg font-semibold">Add New Subject</h3>
+          <div className="bg-white rounded-lg w-full max-w-md h-[90vh] max-h-[600px] flex flex-col overflow-hidden shadow-xl">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 flex-shrink-0 bg-white">
+              <h3 className="text-lg font-semibold text-gray-900">Add New Subject</h3>
               <Button
                 variant="ghost"
                 size="sm"
@@ -157,13 +157,13 @@ const Dashboard: React.FC<DashboardProps> = ({
               </Button>
             </div>
             <div className="flex-1 overflow-hidden">
-              <ScrollArea className="h-full">
-                <div className="p-4">
+              <ScrollArea className="h-full w-full">
+                <div className="p-6">
                   <SubjectForm onAddSubject={onSubjectAdded} />
                 </div>
               </ScrollArea>
             </div>
-            <div className="p-4 border-t flex-shrink-0">
+            <div className="p-4 border-t border-gray-200 flex-shrink-0 bg-gray-50">
               <Button
                 variant="outline"
                 onClick={onCloseSubjectForm}
