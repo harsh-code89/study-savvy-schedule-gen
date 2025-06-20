@@ -24,11 +24,14 @@ export interface AvailableTime {
 
 export interface StudySession {
   id: string;
-  date: Date;
-  subjectId: string;
-  chapterId: string;
+  user_id: string;
+  subject_id: string;
+  title: string;
+  scheduled_date: string;
+  scheduled_time: string;
   duration: number; // in hours
   completed: boolean;
+  created_at: string;
 }
 
 export interface StudyPlan {

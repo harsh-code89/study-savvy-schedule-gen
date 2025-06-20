@@ -40,20 +40,13 @@ const StudyCalendar: React.FC<StudyCalendarProps> = ({
   // Get session for a specific date
   const getSessionsForDate = (date: Date) => {
     return sessions.filter(session => 
-      format(new Date(session.date), 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd')
+      format(new Date(session.scheduled_date), 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd')
     );
   };
 
   // Find subject by ID
   const getSubjectById = (subjectId: string) => {
     return subjects.find(subject => subject.id === subjectId);
-  };
-
-  // Find chapter by ID for a given subject
-  const getChapterById = (subjectId: string, chapterId: string) => {
-    const subject = getSubjectById(subjectId);
-    if (!subject) return null;
-    return subject.chapters.find(chapter => chapter.id === chapterId);
   };
 
   return (
@@ -72,16 +65,15 @@ const StudyCalendar: React.FC<StudyCalendarProps> = ({
               </div>
               <div className="divide-y">
                 {daysSessions.map((session) => {
-                  const subject = getSubjectById(session.subjectId);
-                  const chapter = getChapterById(session.subjectId, session.chapterId);
+                  const subject = getSubjectById(session.subject_id);
                   
-                  if (!subject || !chapter) return null;
+                  if (!subject) return null;
                   
                   return (
                     <div 
                       key={session.id}
                       className="p-3 flex items-center hover:bg-gray-50 transition-colors"
-                      style={{ borderLeft: `4px solid ${subject.color}` }}
+                      style={{ borderLeft: `4px solid ${subject.color || '#6366f1'}` }}
                     >
                       <button 
                         className={`mr-3 h-5 w-5 rounded border flex items-center justify-center ${
@@ -94,7 +86,8 @@ const StudyCalendar: React.FC<StudyCalendarProps> = ({
                       
                       <div className="flex-1">
                         <div className="font-medium">{subject.name}</div>
-                        <div className="text-sm text-gray-600">{chapter.name}</div>
+                        <div className="text-sm text-gray-600">{session.title}</div>
+                        <div className="text-xs text-gray-500">{session.scheduled_time}</div>
                       </div>
                       
                       <div className="text-sm font-medium">

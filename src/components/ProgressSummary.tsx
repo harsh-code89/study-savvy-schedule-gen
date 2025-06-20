@@ -12,7 +12,7 @@ interface ProgressSummaryProps {
 const ProgressSummary: React.FC<ProgressSummaryProps> = ({ subjects, sessions }) => {
   // Calculate progress for each subject
   const subjectProgress = subjects.map(subject => {
-    const subjectSessions = sessions.filter(session => session.subjectId === subject.id);
+    const subjectSessions = sessions.filter(session => session.subject_id === subject.id);
     const totalSessions = subjectSessions.length;
     const completedSessions = subjectSessions.filter(session => session.completed).length;
     const progressPercentage = totalSessions > 0 
@@ -65,7 +65,6 @@ const ProgressSummary: React.FC<ProgressSummaryProps> = ({ subjects, sessions })
         <Progress 
           value={overallProgress} 
           className="h-2"
-          // Fix: Remove indicatorStyle prop that was causing the error
         />
         <div className="mt-1 text-sm text-gray-500">
           {completedSessions} of {totalSessions} sessions completed
@@ -83,9 +82,8 @@ const ProgressSummary: React.FC<ProgressSummaryProps> = ({ subjects, sessions })
             <Progress 
               value={progressPercentage} 
               className="h-2"
-              // Fix: Use inline styles rather than indicatorStyle prop
               style={{ 
-                backgroundColor: `${subject.color}20` // Light background
+                backgroundColor: `${subject.color || '#6366f1'}20` // Light background
               }}
             />
             <div className="flex justify-between mt-1 text-xs text-gray-500">

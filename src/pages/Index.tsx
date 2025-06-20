@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
@@ -165,6 +164,29 @@ const Index = () => {
     }
   };
 
+  const handleToggleSessionCompleted = async (sessionId: string) => {
+    const session = sessions.find(s => s.id === sessionId);
+    if (!session) return;
+    
+    const { error } = await supabase
+      .from('study_sessions')
+      .update({ completed: !session.completed })
+      .eq('id', sessionId);
+    
+    if (error) {
+      console.error('Error updating session:', error);
+      toast({
+        title: "Failed to update session",
+        description: error.message,
+        variant: "destructive"
+      });
+    } else {
+      setSessions(prev => prev.map(s => 
+        s.id === sessionId ? { ...s, completed: !s.completed } : s
+      ));
+    }
+  };
+
   const handleRemoveSubject = async (id: string) => {
     const { error } = await supabase
       .from('subjects')
@@ -186,29 +208,6 @@ const Index = () => {
         title: "Subject removed!",
         description: "Subject and related sessions have been removed."
       });
-    }
-  };
-
-  const handleToggleSessionCompleted = async (sessionId: string) => {
-    const session = sessions.find(s => s.id === sessionId);
-    if (!session) return;
-    
-    const { error } = await supabase
-      .from('study_sessions')
-      .update({ completed: !session.completed })
-      .eq('id', sessionId);
-    
-    if (error) {
-      console.error('Error updating session:', error);
-      toast({
-        title: "Failed to update session",
-        description: error.message,
-        variant: "destructive"
-      });
-    } else {
-      setSessions(prev => prev.map(s => 
-        s.id === sessionId ? { ...s, completed: !s.completed } : s
-      ));
     }
   };
 
