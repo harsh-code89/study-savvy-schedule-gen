@@ -9,7 +9,119 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          preferred_study_time: string | null
+          study_goals: string[] | null
+          study_level: string | null
+          updated_at: string
+          weekly_study_hours: number | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id: string
+          preferred_study_time?: string | null
+          study_goals?: string[] | null
+          study_level?: string | null
+          updated_at?: string
+          weekly_study_hours?: number | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          preferred_study_time?: string | null
+          study_goals?: string[] | null
+          study_level?: string | null
+          updated_at?: string
+          weekly_study_hours?: number | null
+        }
+        Relationships: []
+      }
+      study_sessions: {
+        Row: {
+          completed: boolean | null
+          created_at: string
+          duration: number
+          id: string
+          scheduled_date: string
+          scheduled_time: string
+          subject_id: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean | null
+          created_at?: string
+          duration: number
+          id?: string
+          scheduled_date: string
+          scheduled_time: string
+          subject_id: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean | null
+          created_at?: string
+          duration?: number
+          id?: string
+          scheduled_date?: string
+          scheduled_time?: string
+          subject_id?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_sessions_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subjects: {
+        Row: {
+          created_at: string
+          difficulty: string
+          hours_per_week: number
+          id: string
+          name: string
+          priority: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          difficulty: string
+          hours_per_week: number
+          id?: string
+          name: string
+          priority: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          difficulty?: string
+          hours_per_week?: number
+          id?: string
+          name?: string
+          priority?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,14 +8,12 @@ interface LandingPageProps {
   showAuthModal: boolean;
   onLogin: () => void;
   onCloseAuthModal: () => void;
-  onAuthSuccess: (userData: any) => void;
 }
 
 const LandingPage: React.FC<LandingPageProps> = ({
   showAuthModal,
   onLogin,
-  onCloseAuthModal,
-  onAuthSuccess
+  onCloseAuthModal
 }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-indigo-50 to-blue-50">
@@ -90,7 +87,6 @@ const LandingPage: React.FC<LandingPageProps> = ({
       <AuthModal 
         isOpen={showAuthModal}
         onClose={onCloseAuthModal}
-        onAuthSuccess={onAuthSuccess}
       />
     </div>
   );
