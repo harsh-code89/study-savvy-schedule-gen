@@ -120,11 +120,14 @@ export function generateStudyPlan(
       // Create study session
       const session: StudySession = {
         id: generateId(),
-        date: new Date(currentDate),
-        subjectId: subject.id,
-        chapterId: chapter.id,
+        user_id: 'local-user',
+        subject_id: subject.id,
+        title: chapter.name,
+        scheduled_date: currentDate.toISOString().split('T')[0],
+        scheduled_time: '09:00',
         duration: hoursToStudy,
-        completed: false
+        completed: false,
+        created_at: new Date().toISOString()
       };
       
       // Add session

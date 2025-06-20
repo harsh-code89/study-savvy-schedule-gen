@@ -162,11 +162,14 @@ export const generateStudyPlan = async (
           if (currentDate <= endDateTime) {
             sessions.push({
               id: Math.random().toString(36).substring(2, 9),
-              date: new Date(currentDate),
-              subjectId: subject.id,
-              chapterId: chapter.id,
+              user_id: 'local-user',
+              subject_id: subject.id,
+              title: chapter.name,
+              scheduled_date: currentDate.toISOString().split('T')[0],
+              scheduled_time: '09:00',
               duration: chapter.estimatedHours,
-              completed: false
+              completed: false,
+              created_at: new Date().toISOString()
             });
             currentDate.setDate(currentDate.getDate() + 1);
           }
@@ -216,11 +219,14 @@ export const updateStudySession = async (
       // For now, just return the session with updates applied
       const mockSession: StudySession = {
         id: sessionId,
-        date: new Date(),
-        subjectId: '',
-        chapterId: '',
+        user_id: 'local-user',
+        subject_id: '',
+        title: '',
+        scheduled_date: new Date().toISOString().split('T')[0],
+        scheduled_time: '09:00',
         duration: 1,
         completed: false,
+        created_at: new Date().toISOString(),
         ...updates
       };
       return mockSession;
