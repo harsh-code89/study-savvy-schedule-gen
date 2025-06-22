@@ -2,16 +2,13 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
-import { User, Bell, Palette, Shield, HelpCircle } from 'lucide-react';
+import { Bell, Palette, Shield, HelpCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -32,25 +29,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, user, on
     language: 'en'
   });
 
-  const [profileData, setProfileData] = useState({
-    full_name: '',
-    email: '',
-    study_level: '',
-    weekly_study_hours: 0
-  });
-
   const [loading, setLoading] = useState(false);
 
-  // Load user data and settings when modal opens
+  // Load settings when modal opens
   useEffect(() => {
-    if (user && isOpen) {
-      setProfileData({
-        full_name: user.full_name || user.name || '',
-        email: user.email || '',
-        study_level: user.study_level || '',
-        weekly_study_hours: user.weekly_study_hours || 0
-      });
-      
+    if (isOpen) {
       // Load settings from localStorage or use defaults
       const savedSettings = localStorage.getItem('studysavvy_settings');
       if (savedSettings) {
@@ -73,7 +56,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, user, on
         }
       }
     }
-  }, [user, isOpen]);
+  }, [isOpen]);
 
   const handleSettingChange = (key: string, value: any) => {
     setSettings(prev => ({
@@ -104,46 +87,15 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, user, on
     }
   };
 
-  const handleProfileChange = (key: string, value: any) => {
-    setProfileData(prev => ({
-      ...prev,
-      [key]: value
-    }));
-  };
-
   const handleSave = async () => {
     setLoading(true);
     try {
       // Save settings to localStorage
       localStorage.setItem('studysavvy_settings', JSON.stringify(settings));
       
-      // Update profile in Supabase if user is authenticated
-      if (user?.id && supabase) {
-        const { error } = await supabase
-          .from('profiles')
-          .update({
-            full_name: profileData.full_name,
-            study_level: profileData.study_level,
-            weekly_study_hours: profileData.weekly_study_hours,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', user.id);
-
-        if (error) {
-          console.error('Error updating profile:', error);
-          toast({
-            title: "Profile update failed",
-            description: error.message,
-            variant: "destructive"
-          });
-          return;
-        }
-      }
-      
-      // Create updated user object
+      // Create updated user object with settings
       const updatedUser = {
         ...user,
-        ...profileData,
         settings
       };
       
@@ -252,12 +204,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, user, on
           </DialogTitle>
         </DialogHeader>
         
-        <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 bg-white/50 backdrop-blur-sm dark:bg-gray-800/50">
-            <TabsTrigger value="profile" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-indigo-500 data-[state=active]:text-white">
-              <User className="h-4 w-4 mr-2" />
-              Profile
-            </TabsTrigger>
+        <Tabs defaultValue="notifications" className="w-full">
+          <TabsList className="grid w-full grid-cols-3 bg-white/50 backdrop-blur-sm dark:bg-gray-800/50">
             <TabsTrigger value="notifications" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-indigo-500 data-[state=active]:text-white">
               <Bell className="h-4 w-4 mr-2" />
               Notifications
@@ -272,64 +220,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, user, on
             </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="profile" className="space-y-4">
-            <Card className="border-none shadow-lg bg-white/80 backdrop-blur-sm dark:bg-gray-800/80">
-              <CardHeader>
-                <CardTitle className="dark:text-white">Profile Information</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="full_name" className="dark:text-gray-200">Full Name</Label>
-                  <Input
-                    id="full_name"
-                    value={profileData.full_name}
-                    onChange={(e) => handleProfileChange('full_name', e.target.value)}
-                    className="bg-white/70 border-purple-200 focus:border-purple-400 dark:bg-gray-700/70 dark:border-gray-600 dark:text-white"
-                    placeholder="Enter your full name"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="dark:text-gray-200">Email</Label>
-                  <Input
-                    id="email"
-                    value={profileData.email}
-                    className="bg-white/70 border-purple-200 focus:border-purple-400 dark:bg-gray-700/70 dark:border-gray-600 dark:text-white"
-                    disabled
-                    placeholder="Email cannot be changed"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="study_level" className="dark:text-gray-200">Study Level</Label>
-                  <Select value={profileData.study_level} onValueChange={(value) => handleProfileChange('study_level', value)}>
-                    <SelectTrigger className="bg-white/70 border-purple-200 focus:border-purple-400 dark:bg-gray-700/70 dark:border-gray-600 dark:text-white">
-                      <SelectValue placeholder="Select your study level" />
-                    </SelectTrigger>
-                    <SelectContent className="dark:bg-gray-800 dark:border-gray-600">
-                      <SelectItem value="high-school">High School</SelectItem>
-                      <SelectItem value="undergraduate">Undergraduate</SelectItem>
-                      <SelectItem value="graduate">Graduate</SelectItem>
-                      <SelectItem value="professional">Professional</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="weekly_hours" className="dark:text-gray-200">Weekly Study Hours</Label>
-                  <Input
-                    id="weekly_hours"
-                    type="number"
-                    value={profileData.weekly_study_hours}
-                    onChange={(e) => handleProfileChange('weekly_study_hours', parseInt(e.target.value) || 0)}
-                    className="bg-white/70 border-purple-200 focus:border-purple-400 dark:bg-gray-700/70 dark:border-gray-600 dark:text-white"
-                    placeholder="Hours per week"
-                    min="0"
-                    max="168"
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
           <TabsContent value="notifications" className="space-y-4">
             <Card className="border-none shadow-lg bg-white/80 backdrop-blur-sm dark:bg-gray-800/80">
               <CardHeader>
@@ -338,7 +228,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, user, on
               <CardContent className="space-y-6">
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label className="dark:text-gray-200">Push Notifications</Label>
+                    <label className="dark:text-gray-200 font-medium">Push Notifications</label>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Receive notifications about your study sessions</p>
                   </div>
                   <Switch
@@ -349,7 +239,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, user, on
                 <Separator className="dark:bg-gray-600" />
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label className="dark:text-gray-200">Email Reminders</Label>
+                    <label className="dark:text-gray-200 font-medium">Email Reminders</label>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Get email reminders for upcoming study sessions</p>
                   </div>
                   <Switch
@@ -360,7 +250,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, user, on
                 <Separator className="dark:bg-gray-600" />
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label className="dark:text-gray-200">Study Reminders</Label>
+                    <label className="dark:text-gray-200 font-medium">Study Reminders</label>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Daily reminders to maintain your study streak</p>
                   </div>
                   <Switch
@@ -387,7 +277,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, user, on
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-2">
-                  <Label className="dark:text-gray-200">Theme Color</Label>
+                  <label className="dark:text-gray-200 font-medium">Theme Color</label>
                   <Select value={settings.theme} onValueChange={handleThemeChange}>
                     <SelectTrigger className="bg-white/70 border-purple-200 focus:border-purple-400 dark:bg-gray-700/70 dark:border-gray-600 dark:text-white">
                       <SelectValue />
@@ -403,7 +293,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, user, on
                 <Separator className="dark:bg-gray-600" />
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label className="dark:text-gray-200">Dark Mode</Label>
+                    <label className="dark:text-gray-200 font-medium">Dark Mode</label>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Switch to dark theme</p>
                   </div>
                   <Switch
@@ -413,7 +303,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, user, on
                 </div>
                 <Separator className="dark:bg-gray-600" />
                 <div className="space-y-2">
-                  <Label className="dark:text-gray-200">Language</Label>
+                  <label className="dark:text-gray-200 font-medium">Language</label>
                   <Select value={settings.language} onValueChange={(value) => handleSettingChange('language', value)}>
                     <SelectTrigger className="bg-white/70 border-purple-200 focus:border-purple-400 dark:bg-gray-700/70 dark:border-gray-600 dark:text-white">
                       <SelectValue />

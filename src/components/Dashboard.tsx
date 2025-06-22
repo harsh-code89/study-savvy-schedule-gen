@@ -64,10 +64,35 @@ const Dashboard: React.FC<DashboardProps> = ({
   
   const handleProfileClick = () => {
     // Open profile setup modal when profile is clicked
-    // We need to trigger the profile setup modal to show
-    // Since we don't have a direct handler, we'll use the existing onCloseProfileSetup
-    // but we need to modify the parent to handle showing the profile
     window.dispatchEvent(new CustomEvent('showProfile'));
+  };
+
+  // Get user display name (prioritize full_name over email)
+  const getUserDisplayName = () => {
+    if (user?.full_name) {
+      return user.full_name;
+    }
+    if (user?.name) {
+      return user.name;
+    }
+    if (user?.email) {
+      return user.email.split('@')[0];
+    }
+    return 'User';
+  };
+
+  // Get user avatar initials (prioritize full_name over email)
+  const getUserInitials = () => {
+    if (user?.full_name) {
+      return user.full_name.charAt(0).toUpperCase();
+    }
+    if (user?.name) {
+      return user.name.charAt(0).toUpperCase();
+    }
+    if (user?.email) {
+      return user.email.charAt(0).toUpperCase();
+    }
+    return 'U';
   };
   
   return (
@@ -90,11 +115,11 @@ const Dashboard: React.FC<DashboardProps> = ({
                     <Avatar className="h-8 w-8">
                       <AvatarImage src={user?.avatar_url} />
                       <AvatarFallback className="bg-gradient-to-r from-purple-400 to-indigo-400 text-white">
-                        {user?.full_name?.charAt(0) || user?.name?.charAt(0) || user?.email?.charAt(0) || 'U'}
+                        {getUserInitials()}
                       </AvatarFallback>
                     </Avatar>
                     <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
-                      {user?.full_name || user?.name || user?.email?.split('@')[0]}
+                      {getUserDisplayName()}
                     </span>
                     <ChevronDown className="h-4 w-4 text-gray-500 dark:text-gray-400" />
                   </Button>
@@ -133,7 +158,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-2">
-            Welcome back, {user?.full_name || user?.name || user?.email?.split('@')[0]}! 👋
+            Welcome back, {getUserDisplayName()}! 👋
           </h2>
           <p className="text-gray-600 dark:text-gray-300">
             Let's continue your learning journey
