@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
-import { Eye, EyeOff, User, Mail, Lock, Github } from 'lucide-react';
+import { Eye, EyeOff, User, Mail, Lock, Github, CheckCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 
@@ -21,7 +21,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [loginData, setLoginData] = useState({ email: '', password: '' });
   const [signupData, setSignupData] = useState({ email: '', password: '', confirmPassword: '', fullName: '' });
   const [isLoading, setIsLoading] = useState(false);
-  const { signIn, signUp, signInWithGoogle, signInWithGithub } = useAuth();
+  const [showVerificationMessage, setShowVerificationMessage] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState('');
+  const { signIn, signUp, signInWithGoogle, signInWithGithub, resendVerification } = useAuth();
   const { toast } = useToast();
 
   const handleLoginChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -39,11 +41,21 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     try {
       const { error } = await signIn(loginData.email, loginData.password);
       if (error) {
-        toast({
-          title: "Login failed",
-          description: error.message,
-          variant: "destructive"
-        });
+        if (error.message.includes('Email not confirmed') || error.message.includes('email_not_confirmed')) {
+          setVerificationEmail(loginData.email);
+          setShowVerificationMessage(true);
+          toast({
+            title: "Email verification required",
+            description: "Please check your email and click the verification link before signing in.",
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Login failed",
+            description: error.message,
+            variant: "destructive"
+          });
+        }
       } else {
         toast({
           title: "Welcome back!",
@@ -77,23 +89,57 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     setIsLoading(true);
     
     try {
-      const { error } = await signUp(signupData.email, signupData.password, signupData.fullName);
+      const { data, error } = await signUp(signupData.email, signupData.password, signupData.fullName);
       if (error) {
         toast({
           title: "Signup failed",
           description: error.message,
           variant: "destructive"
         });
+      } else if (data.user && !data.user.email_confirmed_at) {
+        setVerificationEmail(signupData.email);
+        setShowVerificationMessage(true);
+        toast({
+          title: "Account created!",
+          description: "Please check your email to verify your account before signing in."
+        });
       } else {
         toast({
           title: "Account created!",
-          description: "Please check your email to verify your account."
+          description: "You can now sign in to your account."
         });
         onClose();
       }
     } catch (error) {
       toast({
         title: "Signup failed",
+        description: "An unexpected error occurred.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    setIsLoading(true);
+    try {
+      const { error } = await resendVerification(verificationEmail);
+      if (error) {
+        toast({
+          title: "Failed to resend verification",
+          description: error.message,
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Verification email sent",
+          description: "Please check your email for the verification link."
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Failed to resend verification",
         description: "An unexpected error occurred.",
         variant: "destructive"
       });
@@ -145,6 +191,54 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
       setIsLoading(false);
     }
   };
+
+  if (showVerificationMessage) {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-[450px] bg-gradient-to-br from-white via-purple-50 to-indigo-50 border-none shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-center text-2xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+              Check Your Email
+            </DialogTitle>
+          </DialogHeader>
+          
+          <Card className="border-none shadow-lg bg-white/80 backdrop-blur-sm">
+            <CardHeader className="text-center">
+              <div className="mx-auto mb-4 p-3 bg-gradient-to-r from-green-100 to-emerald-100 rounded-full w-fit">
+                <CheckCircle className="h-8 w-8 text-green-600" />
+              </div>
+              <CardTitle className="text-xl">Verification Email Sent</CardTitle>
+              <CardDescription>
+                We've sent a verification link to <strong>{verificationEmail}</strong>
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 text-center">
+              <p className="text-gray-600">
+                Please check your email and click the verification link to activate your account.
+              </p>
+              <div className="space-y-2">
+                <Button
+                  onClick={handleResendVerification}
+                  disabled={isLoading}
+                  variant="outline"
+                  className="w-full"
+                >
+                  {isLoading ? 'Resending...' : 'Resend Verification Email'}
+                </Button>
+                <Button
+                  onClick={() => setShowVerificationMessage(false)}
+                  variant="ghost"
+                  className="w-full"
+                >
+                  Back to Sign In
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
