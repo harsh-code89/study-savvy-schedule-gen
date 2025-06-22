@@ -12,6 +12,7 @@ const Index = () => {
   const [showProfileSetup, setShowProfileSetup] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showSubjectForm, setShowSubjectForm] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [sessions, setSessions] = useState<StudySession[]>([]);
 
@@ -95,7 +96,7 @@ const Index = () => {
 
   const handleRemoveSubject = (subjectId: string) => {
     const updatedSubjects = subjects.filter(subject => subject.id !== subjectId);
-    const updatedSessions = sessions.filter(session => session.subjectId !== subjectId);
+    const updatedSessions = sessions.filter(session => session.subject_id !== subjectId);
     
     setSubjects(updatedSubjects);
     setSessions(updatedSessions);
@@ -115,8 +116,22 @@ const Index = () => {
     localStorage.setItem('studysavvy_sessions', JSON.stringify(updatedSessions));
   };
 
+  const handleLogin = () => {
+    setShowAuthModal(true);
+  };
+
+  const handleCloseAuthModal = () => {
+    setShowAuthModal(false);
+  };
+
   if (!user) {
-    return <LandingPage />;
+    return (
+      <LandingPage 
+        showAuthModal={showAuthModal}
+        onLogin={handleLogin}
+        onCloseAuthModal={handleCloseAuthModal}
+      />
+    );
   }
 
   return (

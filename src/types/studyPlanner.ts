@@ -8,6 +8,9 @@ export interface SubjectInfo {
   color: string;
 }
 
+// Add Subject as an alias for backward compatibility
+export type Subject = SubjectInfo;
+
 export interface ChapterInfo {
   id: string;
   name: string;

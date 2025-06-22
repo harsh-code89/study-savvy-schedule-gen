@@ -1,3 +1,4 @@
+
 import { SubjectInfo, ChapterInfo, AvailableTime, StudySession, StudyPlan } from "../types/studyPlanner";
 
 // Calculate priority score for a chapter based on exam date proximity and difficulty
@@ -52,8 +53,53 @@ function generateId(): string {
          Math.random().toString(36).substring(2, 15);
 }
 
-// Main function to generate study plan
-export function generateStudyPlan(
+// Simplified function to generate study plan for a single subject
+export function generateStudyPlan(subject: SubjectInfo): StudySession[] {
+  const sessions: StudySession[] = [];
+  const currentDate = new Date();
+  
+  // Create basic sessions for each chapter of the subject
+  if (subject.chapters && subject.chapters.length > 0) {
+    subject.chapters.forEach((chapter, index) => {
+      const sessionDate = new Date(currentDate);
+      sessionDate.setDate(sessionDate.getDate() + index + 1);
+      
+      const session: StudySession = {
+        id: generateId(),
+        user_id: 'local-user',
+        subject_id: subject.id,
+        title: `Study ${chapter.name}`,
+        scheduled_date: sessionDate.toISOString().split('T')[0],
+        scheduled_time: '09:00',
+        duration: chapter.estimatedHours || 2,
+        completed: false,
+        created_at: new Date().toISOString()
+      };
+      
+      sessions.push(session);
+    });
+  } else {
+    // If no chapters, create a general study session
+    const session: StudySession = {
+      id: generateId(),
+      user_id: 'local-user',
+      subject_id: subject.id,
+      title: `Study ${subject.name}`,
+      scheduled_date: currentDate.toISOString().split('T')[0],
+      scheduled_time: '09:00',
+      duration: 2,
+      completed: false,
+      created_at: new Date().toISOString()
+    };
+    
+    sessions.push(session);
+  }
+  
+  return sessions;
+}
+
+// Main function to generate full study plan (for backward compatibility)
+export function generateFullStudyPlan(
   subjects: SubjectInfo[],
   availableTimes: AvailableTime[],
   startDate: Date,

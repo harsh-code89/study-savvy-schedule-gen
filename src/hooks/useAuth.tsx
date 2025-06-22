@@ -113,6 +113,9 @@ export const useAuth = () => {
     return { error };
   };
 
+  // Add logout as an alias for signOut for backward compatibility
+  const logout = signOut;
+
   const resendVerification = async (email: string) => {
     try {
       const { error } = await supabase.auth.resend({
@@ -151,6 +154,7 @@ export const useAuth = () => {
     signInWithGoogle,
     signInWithGithub,
     signOut,
+    logout,
     resendVerification,
   };
 };
