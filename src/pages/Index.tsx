@@ -1,286 +1,142 @@
+
 import React, { useState, useEffect } from 'react';
-import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/useAuth';
 import LandingPage from '@/components/LandingPage';
 import Dashboard from '@/components/Dashboard';
-import { supabase } from '@/integrations/supabase/client';
-import { StudySession } from '@/types/studyPlanner';
+import { useAuth } from '@/hooks/useAuth';
+import { StudySession, Subject } from '@/types/studyPlanner';
+import { generateStudyPlan } from '@/utils/studyPlanGenerator';
 
 const Index = () => {
-  const { user, loading, signOut } = useAuth();
-  const [showAuthModal, setShowAuthModal] = useState(false);
+  const { user, logout } = useAuth();
+  const [activeTab, setActiveTab] = useState('overview');
   const [showProfileSetup, setShowProfileSetup] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showSubjectForm, setShowSubjectForm] = useState(false);
-  const [userProfile, setUserProfile] = useState<any>(null);
-  const [subjects, setSubjects] = useState<any[]>([]);
+  const [subjects, setSubjects] = useState<Subject[]>([]);
   const [sessions, setSessions] = useState<StudySession[]>([]);
-  const [activeTab, setActiveTab] = useState('overview');
-  const { toast } = useToast();
 
-  // Fetch user profile and data when user is authenticated
+  // Load data from localStorage
   useEffect(() => {
-    if (user) {
-      fetchUserProfile();
-      fetchSubjects();
-      fetchSessions();
-    } else {
-      setUserProfile(null);
-      setSubjects([]);
-      setSessions([]);
+    const savedSubjects = localStorage.getItem('studysavvy_subjects');
+    const savedSessions = localStorage.getItem('studysavvy_sessions');
+    
+    if (savedSubjects) {
+      setSubjects(JSON.parse(savedSubjects));
     }
-  }, [user]);
-
-  const fetchUserProfile = async () => {
-    if (!user) return;
     
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single();
-    
-    if (error) {
-      console.error('Error fetching profile:', error);
-      // Create profile if it doesn't exist
-      if (error.code === 'PGRST116') {
-        const { data: newProfile, error: createError } = await supabase
-          .from('profiles')
-          .insert({
-            id: user.id,
-            email: user.email,
-            full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || ''
-          })
-          .select()
-          .single();
-        
-        if (createError) {
-          console.error('Error creating profile:', createError);
-        } else {
-          setUserProfile(newProfile);
-        }
-      }
-    } else {
-      setUserProfile(data);
-      // Show profile setup if profile is incomplete
-      if (!data.study_level || !data.preferred_study_time) {
-        setShowProfileSetup(true);
-      }
+    if (savedSessions) {
+      setSessions(JSON.parse(savedSessions));
     }
-  };
+  }, []);
 
-  const fetchSubjects = async () => {
-    if (!user) return;
-    
-    const { data, error } = await supabase
-      .from('subjects')
-      .select('*')
-      .eq('user_id', user.id);
-    
-    if (error) {
-      console.error('Error fetching subjects:', error);
-    } else {
-      setSubjects(data || []);
-    }
-  };
+  // Listen for custom profile show event
+  useEffect(() => {
+    const handleShowProfile = () => {
+      setShowProfileSetup(true);
+    };
 
-  const fetchSessions = async () => {
-    if (!user) return;
-    
-    const { data, error } = await supabase
-      .from('study_sessions')
-      .select('*')
-      .eq('user_id', user.id);
-    
-    if (error) {
-      console.error('Error fetching sessions:', error);
-    } else {
-      setSessions(data || []);
-    }
-  };
+    window.addEventListener('showProfile', handleShowProfile);
+    return () => window.removeEventListener('showProfile', handleShowProfile);
+  }, []);
 
-  const handleLogin = () => {
-    setShowAuthModal(true);
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
   };
 
   const handleLogout = async () => {
-    const { error } = await signOut();
-    if (error) {
-      toast({
-        title: "Logout failed",
-        description: error.message,
-        variant: "destructive"
-      });
-    } else {
-      toast({
-        title: "Logged out successfully",
-        description: "You have been logged out of StudySavvy."
-      });
-    }
+    await logout();
   };
 
-  const handleProfileComplete = async (profileData: any) => {
-    if (!user) return;
-    
-    const { error } = await supabase
-      .from('profiles')
-      .update({
-        study_level: profileData.studyLevel,
-        preferred_study_time: profileData.preferredStudyTime,
-        study_goals: profileData.studyGoals ? [profileData.studyGoals] : [],
-        weekly_study_hours: profileData.weeklyStudyHours || null,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', user.id);
-    
-    if (error) {
-      console.error('Error updating profile:', error);
-      toast({
-        title: "Profile update failed",
-        description: error.message,
-        variant: "destructive"
-      });
-    } else {
-      setShowProfileSetup(false);
-      fetchUserProfile();
-      toast({
-        title: "Profile completed!",
-        description: "Your profile has been set up successfully."
-      });
-    }
+  const handleShowSettings = () => {
+    setShowSettings(true);
+  };
+
+  const handleCloseProfileSetup = () => {
+    setShowProfileSetup(false);
+  };
+
+  const handleProfileComplete = (profileData: any) => {
+    // Update user data in localStorage
+    const updatedUser = { ...user, ...profileData };
+    localStorage.setItem('studysavvy_user', JSON.stringify(updatedUser));
+    setShowProfileSetup(false);
+  };
+
+  const handleCloseSettings = () => {
+    setShowSettings(false);
   };
 
   const handleUserUpdate = (updatedUser: any) => {
-    setUserProfile(updatedUser);
-    toast({
-      title: "Profile updated!",
-      description: "Your profile has been updated successfully."
-    });
+    // Handle user updates from settings
+    localStorage.setItem('studysavvy_user', JSON.stringify(updatedUser));
   };
 
-  const handleSubjectAdded = async (subject: any) => {
-    if (!user) return;
-    
-    const { data, error } = await supabase
-      .from('subjects')
-      .insert({
-        user_id: user.id,
-        name: subject.name,
-        priority: subject.priority,
-        difficulty: subject.difficulty,
-        hours_per_week: subject.hoursPerWeek
-      })
-      .select()
-      .single();
-    
-    if (error) {
-      console.error('Error adding subject:', error);
-      toast({
-        title: "Failed to add subject",
-        description: error.message,
-        variant: "destructive"
-      });
-    } else {
-      setSubjects(prev => [...prev, data]);
-      setShowSubjectForm(false);
-      toast({
-        title: "Subject added!",
-        description: `${subject.name} has been added to your study plan.`
-      });
-    }
+  const handleShowSubjectForm = () => {
+    setShowSubjectForm(true);
   };
 
-  const handleToggleSessionCompleted = async (sessionId: string) => {
-    const session = sessions.find(s => s.id === sessionId);
-    if (!session) return;
-    
-    const { error } = await supabase
-      .from('study_sessions')
-      .update({ completed: !session.completed })
-      .eq('id', sessionId);
-    
-    if (error) {
-      console.error('Error updating session:', error);
-      toast({
-        title: "Failed to update session",
-        description: error.message,
-        variant: "destructive"
-      });
-    } else {
-      setSessions(prev => prev.map(s => 
-        s.id === sessionId ? { ...s, completed: !s.completed } : s
-      ));
-    }
+  const handleCloseSubjectForm = () => {
+    setShowSubjectForm(false);
   };
 
-  const handleRemoveSubject = async (id: string) => {
-    const { error } = await supabase
-      .from('subjects')
-      .delete()
-      .eq('id', id);
+  const handleSubjectAdded = (newSubject: Subject) => {
+    const updatedSubjects = [...subjects, newSubject];
+    setSubjects(updatedSubjects);
+    localStorage.setItem('studysavvy_subjects', JSON.stringify(updatedSubjects));
     
-    if (error) {
-      console.error('Error removing subject:', error);
-      toast({
-        title: "Failed to remove subject",
-        description: error.message,
-        variant: "destructive"
-      });
-    } else {
-      setSubjects(prev => prev.filter(subject => subject.id !== id));
-      // Also remove related sessions
-      setSessions(prev => prev.filter(session => session.subject_id !== id));
-      toast({
-        title: "Subject removed!",
-        description: "Subject and related sessions have been removed."
-      });
-    }
+    // Generate study sessions for the new subject
+    const newSessions = generateStudyPlan(newSubject);
+    const updatedSessions = [...sessions, ...newSessions];
+    setSessions(updatedSessions);
+    localStorage.setItem('studysavvy_sessions', JSON.stringify(updatedSessions));
+    
+    setShowSubjectForm(false);
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-indigo-50 to-blue-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
+  const handleRemoveSubject = (subjectId: string) => {
+    const updatedSubjects = subjects.filter(subject => subject.id !== subjectId);
+    const updatedSessions = sessions.filter(session => session.subjectId !== subjectId);
+    
+    setSubjects(updatedSubjects);
+    setSessions(updatedSessions);
+    
+    localStorage.setItem('studysavvy_subjects', JSON.stringify(updatedSubjects));
+    localStorage.setItem('studysavvy_sessions', JSON.stringify(updatedSessions));
+  };
+
+  const handleToggleSessionCompleted = (sessionId: string) => {
+    const updatedSessions = sessions.map(session =>
+      session.id === sessionId 
+        ? { ...session, completed: !session.completed }
+        : session
     );
-  }
+    
+    setSessions(updatedSessions);
+    localStorage.setItem('studysavvy_sessions', JSON.stringify(updatedSessions));
+  };
 
   if (!user) {
-    return (
-      <LandingPage
-        showAuthModal={showAuthModal}
-        onLogin={handleLogin}
-        onCloseAuthModal={() => setShowAuthModal(false)}
-      />
-    );
+    return <LandingPage />;
   }
 
   return (
     <Dashboard
-      user={userProfile || { 
-        name: user.user_metadata?.full_name || user.email?.split('@')[0], 
-        email: user.email,
-        full_name: user.user_metadata?.full_name,
-        avatar_url: user.user_metadata?.avatar_url
-      }}
+      user={user}
       subjects={subjects}
       sessions={sessions}
       activeTab={activeTab}
       showProfileSetup={showProfileSetup}
       showSettings={showSettings}
       showSubjectForm={showSubjectForm}
-      onTabChange={setActiveTab}
+      onTabChange={handleTabChange}
       onLogout={handleLogout}
-      onShowSettings={() => setShowSettings(true)}
-      onCloseProfileSetup={() => setShowProfileSetup(false)}
+      onShowSettings={handleShowSettings}
+      onCloseProfileSetup={handleCloseProfileSetup}
       onProfileComplete={handleProfileComplete}
-      onCloseSettings={() => setShowSettings(false)}
+      onCloseSettings={handleCloseSettings}
       onUserUpdate={handleUserUpdate}
-      onShowSubjectForm={() => setShowSubjectForm(true)}
-      onCloseSubjectForm={() => setShowSubjectForm(false)}
+      onShowSubjectForm={handleShowSubjectForm}
+      onCloseSubjectForm={handleCloseSubjectForm}
       onSubjectAdded={handleSubjectAdded}
       onRemoveSubject={handleRemoveSubject}
       onToggleSessionCompleted={handleToggleSessionCompleted}

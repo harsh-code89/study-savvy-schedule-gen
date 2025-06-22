@@ -64,7 +64,10 @@ const Dashboard: React.FC<DashboardProps> = ({
   
   const handleProfileClick = () => {
     // Open profile setup modal when profile is clicked
-    onCloseProfileSetup();
+    // We need to trigger the profile setup modal to show
+    // Since we don't have a direct handler, we'll use the existing onCloseProfileSetup
+    // but we need to modify the parent to handle showing the profile
+    window.dispatchEvent(new CustomEvent('showProfile'));
   };
   
   return (
