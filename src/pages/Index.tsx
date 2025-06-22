@@ -42,6 +42,24 @@ const Index = () => {
     
     if (error) {
       console.error('Error fetching profile:', error);
+      // Create profile if it doesn't exist
+      if (error.code === 'PGRST116') {
+        const { data: newProfile, error: createError } = await supabase
+          .from('profiles')
+          .insert({
+            id: user.id,
+            email: user.email,
+            full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || ''
+          })
+          .select()
+          .single();
+        
+        if (createError) {
+          console.error('Error creating profile:', createError);
+        } else {
+          setUserProfile(newProfile);
+        }
+      }
     } else {
       setUserProfile(data);
       // Show profile setup if profile is incomplete
@@ -130,6 +148,14 @@ const Index = () => {
         description: "Your profile has been set up successfully."
       });
     }
+  };
+
+  const handleUserUpdate = (updatedUser: any) => {
+    setUserProfile(updatedUser);
+    toast({
+      title: "Profile updated!",
+      description: "Your profile has been updated successfully."
+    });
   };
 
   const handleSubjectAdded = async (subject: any) => {
@@ -234,7 +260,12 @@ const Index = () => {
 
   return (
     <Dashboard
-      user={userProfile || { name: user.user_metadata?.full_name || user.email, email: user.email }}
+      user={userProfile || { 
+        name: user.user_metadata?.full_name || user.email?.split('@')[0], 
+        email: user.email,
+        full_name: user.user_metadata?.full_name,
+        avatar_url: user.user_metadata?.avatar_url
+      }}
       subjects={subjects}
       sessions={sessions}
       activeTab={activeTab}
@@ -247,7 +278,7 @@ const Index = () => {
       onCloseProfileSetup={() => setShowProfileSetup(false)}
       onProfileComplete={handleProfileComplete}
       onCloseSettings={() => setShowSettings(false)}
-      onUserUpdate={setUserProfile}
+      onUserUpdate={handleUserUpdate}
       onShowSubjectForm={() => setShowSubjectForm(true)}
       onCloseSubjectForm={() => setShowSubjectForm(false)}
       onSubjectAdded={handleSubjectAdded}

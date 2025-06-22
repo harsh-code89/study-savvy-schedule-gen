@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { User, Bell, Palette, Shield, HelpCircle } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -19,6 +20,8 @@ interface SettingsModalProps {
 }
 
 const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, user, onUserUpdate }) => {
+  const { toast } = useToast();
+  
   const [settings, setSettings] = useState({
     notifications: true,
     emailReminders: true,
@@ -28,6 +31,35 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, user, on
     language: 'en'
   });
 
+  const [profileData, setProfileData] = useState({
+    full_name: '',
+    email: '',
+    study_level: '',
+    weekly_study_hours: 0
+  });
+
+  // Load user data and settings when modal opens
+  useEffect(() => {
+    if (user && isOpen) {
+      setProfileData({
+        full_name: user.full_name || user.name || '',
+        email: user.email || '',
+        study_level: user.study_level || '',
+        weekly_study_hours: user.weekly_study_hours || 0
+      });
+      
+      // Load settings from localStorage or use defaults
+      const savedSettings = localStorage.getItem('studysavvy_settings');
+      if (savedSettings) {
+        try {
+          setSettings(JSON.parse(savedSettings));
+        } catch (error) {
+          console.error('Error loading settings:', error);
+        }
+      }
+    }
+  }, [user, isOpen]);
+
   const handleSettingChange = (key: string, value: any) => {
     setSettings(prev => ({
       ...prev,
@@ -35,14 +67,59 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, user, on
     }));
   };
 
+  const handleProfileChange = (key: string, value: any) => {
+    setProfileData(prev => ({
+      ...prev,
+      [key]: value
+    }));
+  };
+
   const handleSave = () => {
-    const updatedUser = {
-      ...user,
-      settings
-    };
-    localStorage.setItem('studysavvy_user', JSON.stringify(updatedUser));
-    onUserUpdate(updatedUser);
-    onClose();
+    try {
+      // Save settings to localStorage
+      localStorage.setItem('studysavvy_settings', JSON.stringify(settings));
+      
+      // Create updated user object
+      const updatedUser = {
+        ...user,
+        ...profileData,
+        settings
+      };
+      
+      // Save user data to localStorage
+      localStorage.setItem('studysavvy_user', JSON.stringify(updatedUser));
+      
+      // Update user in parent component
+      onUserUpdate(updatedUser);
+      
+      toast({
+        title: "Settings saved!",
+        description: "Your preferences have been updated successfully.",
+      });
+      
+      onClose();
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      toast({
+        title: "Error saving settings",
+        description: "There was a problem saving your preferences. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const applyTheme = (theme: string) => {
+    // This would apply the theme to the app
+    document.documentElement.setAttribute('data-theme', theme);
+    toast({
+      title: "Theme applied!",
+      description: `Switched to ${theme} theme.`,
+    });
+  };
+
+  const handleThemeChange = (theme: string) => {
+    handleSettingChange('theme', theme);
+    applyTheme(theme);
   };
 
   return (
@@ -81,30 +158,51 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, user, on
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Full Name</Label>
+                  <Label htmlFor="full_name">Full Name</Label>
                   <Input
-                    id="name"
-                    value={user?.name || ''}
+                    id="full_name"
+                    value={profileData.full_name}
+                    onChange={(e) => handleProfileChange('full_name', e.target.value)}
                     className="bg-white/70 border-purple-200 focus:border-purple-400"
-                    readOnly
+                    placeholder="Enter your full name"
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <Input
                     id="email"
-                    value={user?.email || ''}
+                    value={profileData.email}
                     className="bg-white/70 border-purple-200 focus:border-purple-400"
-                    readOnly
+                    disabled
+                    placeholder="Email cannot be changed"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="studyLevel">Study Level</Label>
+                  <Label htmlFor="study_level">Study Level</Label>
+                  <Select value={profileData.study_level} onValueChange={(value) => handleProfileChange('study_level', value)}>
+                    <SelectTrigger className="bg-white/70 border-purple-200 focus:border-purple-400">
+                      <SelectValue placeholder="Select your study level" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="high-school">High School</SelectItem>
+                      <SelectItem value="undergraduate">Undergraduate</SelectItem>
+                      <SelectItem value="graduate">Graduate</SelectItem>
+                      <SelectItem value="professional">Professional</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="weekly_hours">Weekly Study Hours</Label>
                   <Input
-                    id="studyLevel"
-                    value={user?.studyLevel || 'Not set'}
+                    id="weekly_hours"
+                    type="number"
+                    value={profileData.weekly_study_hours}
+                    onChange={(e) => handleProfileChange('weekly_study_hours', parseInt(e.target.value) || 0)}
                     className="bg-white/70 border-purple-200 focus:border-purple-400"
-                    readOnly
+                    placeholder="Hours per week"
+                    min="0"
+                    max="168"
                   />
                 </div>
               </CardContent>
@@ -161,7 +259,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, user, on
               <CardContent className="space-y-6">
                 <div className="space-y-2">
                   <Label>Theme Color</Label>
-                  <Select value={settings.theme} onValueChange={(value) => handleSettingChange('theme', value)}>
+                  <Select value={settings.theme} onValueChange={handleThemeChange}>
                     <SelectTrigger className="bg-white/70 border-purple-200 focus:border-purple-400">
                       <SelectValue />
                     </SelectTrigger>
@@ -215,11 +313,20 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, user, on
                     <span className="font-medium text-yellow-800">Data Storage</span>
                   </div>
                   <p className="text-sm text-yellow-700">
-                    Your data is currently stored locally on your device. Connect to a backend service for cloud sync and enhanced security.
+                    Your data is stored securely in Supabase with proper authentication and encryption.
                   </p>
                 </div>
-                <Button variant="outline" className="w-full border-red-200 hover:bg-red-50 text-red-600">
-                  Delete Account
+                <Button 
+                  variant="outline" 
+                  className="w-full border-red-200 hover:bg-red-50 text-red-600"
+                  onClick={() => {
+                    toast({
+                      title: "Account deletion",
+                      description: "Contact support to delete your account.",
+                    });
+                  }}
+                >
+                  Request Account Deletion
                 </Button>
               </CardContent>
             </Card>

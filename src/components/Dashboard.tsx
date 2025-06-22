@@ -62,6 +62,11 @@ const Dashboard: React.FC<DashboardProps> = ({
 }) => {
   console.log('Dashboard showSubjectForm:', showSubjectForm);
   
+  const handleProfileClick = () => {
+    // Open profile setup modal when profile is clicked
+    onCloseProfileSetup();
+  };
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-indigo-50 to-blue-50">
       {/* Header */}
@@ -80,19 +85,22 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="flex items-center gap-2 hover:bg-purple-50 px-3 py-2">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={user?.avatar} />
+                      <AvatarImage src={user?.avatar_url} />
                       <AvatarFallback className="bg-gradient-to-r from-purple-400 to-indigo-400 text-white">
-                        {user?.name?.charAt(0) || 'U'}
+                        {user?.full_name?.charAt(0) || user?.name?.charAt(0) || user?.email?.charAt(0) || 'U'}
                       </AvatarFallback>
                     </Avatar>
                     <span className="text-sm font-medium text-gray-700">
-                      {user?.name}
+                      {user?.full_name || user?.name || user?.email?.split('@')[0]}
                     </span>
                     <ChevronDown className="h-4 w-4 text-gray-500" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56 bg-white border border-gray-200 shadow-lg">
-                  <DropdownMenuItem className="flex items-center gap-2 cursor-pointer hover:bg-purple-50">
+                  <DropdownMenuItem 
+                    className="flex items-center gap-2 cursor-pointer hover:bg-purple-50"
+                    onClick={handleProfileClick}
+                  >
                     <User className="h-4 w-4 text-purple-600" />
                     <span>Profile</span>
                   </DropdownMenuItem>
@@ -122,7 +130,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-gray-800 mb-2">
-            Welcome back, {user?.name}! 👋
+            Welcome back, {user?.full_name || user?.name || user?.email?.split('@')[0]}! 👋
           </h2>
           <p className="text-gray-600">
             Let's continue your learning journey
