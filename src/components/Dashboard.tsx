@@ -68,13 +68,13 @@ const Dashboard: React.FC<DashboardProps> = ({
   };
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-indigo-50 to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-indigo-50 to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-sm border-b border-purple-100 sticky top-0 z-40">
+      <header className="bg-white/80 backdrop-blur-sm border-b border-purple-100 dark:bg-gray-900/80 dark:border-gray-700 sticky top-0 z-40">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <BookOpen className="h-8 w-8 text-purple-600" />
+              <BookOpen className="h-8 w-8 text-purple-600 dark:text-purple-400" />
               <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
                 StudySavvy
               </h1>
@@ -83,37 +83,37 @@ const Dashboard: React.FC<DashboardProps> = ({
             <div className="flex items-center gap-4">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex items-center gap-2 hover:bg-purple-50 px-3 py-2">
+                  <Button variant="ghost" className="flex items-center gap-2 hover:bg-purple-50 dark:hover:bg-gray-700 px-3 py-2">
                     <Avatar className="h-8 w-8">
                       <AvatarImage src={user?.avatar_url} />
                       <AvatarFallback className="bg-gradient-to-r from-purple-400 to-indigo-400 text-white">
                         {user?.full_name?.charAt(0) || user?.name?.charAt(0) || user?.email?.charAt(0) || 'U'}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="text-sm font-medium text-gray-700">
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
                       {user?.full_name || user?.name || user?.email?.split('@')[0]}
                     </span>
-                    <ChevronDown className="h-4 w-4 text-gray-500" />
+                    <ChevronDown className="h-4 w-4 text-gray-500 dark:text-gray-400" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 bg-white border border-gray-200 shadow-lg">
+                <DropdownMenuContent align="end" className="w-56 bg-white border border-gray-200 shadow-lg dark:bg-gray-800 dark:border-gray-700">
                   <DropdownMenuItem 
-                    className="flex items-center gap-2 cursor-pointer hover:bg-purple-50"
+                    className="flex items-center gap-2 cursor-pointer hover:bg-purple-50 dark:hover:bg-gray-700 dark:text-white"
                     onClick={handleProfileClick}
                   >
-                    <User className="h-4 w-4 text-purple-600" />
+                    <User className="h-4 w-4 text-purple-600 dark:text-purple-400" />
                     <span>Profile</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem 
-                    className="flex items-center gap-2 cursor-pointer hover:bg-purple-50"
+                    className="flex items-center gap-2 cursor-pointer hover:bg-purple-50 dark:hover:bg-gray-700 dark:text-white"
                     onClick={onShowSettings}
                   >
-                    <Settings className="h-4 w-4 text-purple-600" />
+                    <Settings className="h-4 w-4 text-purple-600 dark:text-purple-400" />
                     <span>Settings</span>
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator />
+                  <DropdownMenuSeparator className="dark:bg-gray-600" />
                   <DropdownMenuItem 
-                    className="flex items-center gap-2 cursor-pointer hover:bg-red-50 text-red-600"
+                    className="flex items-center gap-2 cursor-pointer hover:bg-red-50 text-red-600 dark:hover:bg-red-900/20 dark:text-red-400"
                     onClick={onLogout}
                   >
                     <LogOut className="h-4 w-4" />
@@ -129,10 +129,10 @@ const Dashboard: React.FC<DashboardProps> = ({
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h2 className="text-3xl font-bold text-gray-800 mb-2">
+          <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-2">
             Welcome back, {user?.full_name || user?.name || user?.email?.split('@')[0]}! 👋
           </h2>
-          <p className="text-gray-600">
+          <p className="text-gray-600 dark:text-gray-300">
             Let's continue your learning journey
           </p>
         </div>
@@ -166,14 +166,14 @@ const Dashboard: React.FC<DashboardProps> = ({
 
       {showSubjectForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg w-full max-w-md h-[90vh] max-h-[600px] flex flex-col overflow-hidden shadow-xl">
-            <div className="flex items-center justify-between p-4 border-b border-gray-200 flex-shrink-0 bg-white">
-              <h3 className="text-lg font-semibold text-gray-900">Add New Subject</h3>
+          <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-md h-[90vh] max-h-[600px] flex flex-col overflow-hidden shadow-xl">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 bg-white dark:bg-gray-800">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Add New Subject</h3>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={onCloseSubjectForm}
-                className="text-gray-400 hover:text-gray-600 h-8 w-8 p-0"
+                className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 h-8 w-8 p-0"
               >
                 ×
               </Button>
@@ -185,11 +185,11 @@ const Dashboard: React.FC<DashboardProps> = ({
                 </div>
               </ScrollArea>
             </div>
-            <div className="p-4 border-t border-gray-200 flex-shrink-0 bg-gray-50">
+            <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0 bg-gray-50 dark:bg-gray-900">
               <Button
                 variant="outline"
                 onClick={onCloseSubjectForm}
-                className="w-full"
+                className="w-full dark:border-gray-600 dark:hover:bg-gray-700"
               >
                 Cancel
               </Button>

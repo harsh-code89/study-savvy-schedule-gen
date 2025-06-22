@@ -83,6 +83,27 @@
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
+
+  /* Theme-specific color overrides */
+  [data-theme="blue"] {
+    --primary: 217 91% 60%;
+    --primary-foreground: 222.2 84% 4.9%;
+  }
+
+  [data-theme="green"] {
+    --primary: 142 76% 36%;
+    --primary-foreground: 355.7 100% 97.3%;
+  }
+
+  [data-theme="orange"] {
+    --primary: 24.6 95% 53.1%;
+    --primary-foreground: 60 9.1% 97.8%;
+  }
+
+  [data-theme="purple"] {
+    --primary: 262 83% 63%;
+    --primary-foreground: 210 40% 98%;
+  }
 }
 
 @layer base {
@@ -92,6 +113,12 @@
 
   body {
     @apply bg-background text-foreground;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  /* Ensure smooth transitions for theme changes */
+  html {
+    transition: background-color 0.3s ease;
   }
 }
 
@@ -101,4 +128,9 @@
 
 .glass-card {
   @apply bg-white bg-opacity-80 backdrop-filter backdrop-blur-lg border border-white border-opacity-20 shadow-lg;
+}
+
+/* Dark mode glass card variant */
+.dark .glass-card {
+  @apply bg-gray-800 bg-opacity-80 border-gray-700 border-opacity-20;
 }
