@@ -70,12 +70,18 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   // Get user display name (prioritize full_name over email)
   const getUserDisplayName = () => {
+    // Check for full_name first (from user metadata or profile)
+    if (user?.user_metadata?.full_name) {
+      return user.user_metadata.full_name;
+    }
     if (user?.full_name) {
       return user.full_name;
     }
+    // Check for name as fallback
     if (user?.name) {
       return user.name;
     }
+    // Only use email as last resort
     if (user?.email) {
       return user.email.split('@')[0];
     }
@@ -84,12 +90,18 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   // Get user avatar initials (prioritize full_name over email)
   const getUserInitials = () => {
+    // Check for full_name first (from user metadata or profile)
+    if (user?.user_metadata?.full_name) {
+      return user.user_metadata.full_name.charAt(0).toUpperCase();
+    }
     if (user?.full_name) {
       return user.full_name.charAt(0).toUpperCase();
     }
+    // Check for name as fallback
     if (user?.name) {
       return user.name.charAt(0).toUpperCase();
     }
+    // Only use email as last resort
     if (user?.email) {
       return user.email.charAt(0).toUpperCase();
     }
