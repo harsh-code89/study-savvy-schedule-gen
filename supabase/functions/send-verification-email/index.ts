@@ -31,8 +31,12 @@ const handler = async (req: Request): Promise<Response> => {
     const subject = type === 'signup' ? 'Verify your StudySavvy account' : 'Confirm your email change';
     const actionText = type === 'signup' ? 'verify your account' : 'confirm your email change';
 
+    // Use a verified sender address - you need to verify your domain at resend.com/domains
+    // For now, we'll use the default onboarding address which works for testing
+    const fromAddress = "StudySavvy <onboarding@resend.dev>";
+
     const emailResponse = await resend.emails.send({
-      from: "StudySavvy <onboarding@resend.dev>",
+      from: fromAddress,
       to: [email],
       subject,
       html: `
@@ -74,9 +78,36 @@ const handler = async (req: Request): Promise<Response> => {
       `,
     });
 
+    console.log("Email response:", emailResponse);
+
+    // Check if there was an error
+    if (emailResponse.error) {
+      console.error("Resend API error:", emailResponse.error);
+      
+      // Handle the specific domain verification error
+      if (emailResponse.error.message?.includes('verify a domain')) {
+        return new Response(JSON.stringify({ 
+          error: 'Email domain not verified. Please verify your domain at resend.com/domains or use a verified email address.',
+          details: emailResponse.error.message
+        }), {
+          status: 403,
+          headers: {
+            "Content-Type": "application/json",
+            ...corsHeaders,
+          },
+        });
+      }
+      
+      throw new Error(emailResponse.error.message || 'Failed to send email');
+    }
+
     console.log("Verification email sent successfully:", emailResponse);
 
-    return new Response(JSON.stringify({ success: true, id: emailResponse.data?.id }), {
+    return new Response(JSON.stringify({ 
+      success: true, 
+      id: emailResponse.data?.id,
+      message: 'Verification email sent successfully'
+    }), {
       status: 200,
       headers: {
         "Content-Type": "application/json",
@@ -86,7 +117,10 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (error: any) {
     console.error("Error sending verification email:", error);
     return new Response(
-      JSON.stringify({ error: error.message || 'Failed to send verification email' }),
+      JSON.stringify({ 
+        error: error.message || 'Failed to send verification email',
+        details: 'Please check your email configuration and domain verification'
+      }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },

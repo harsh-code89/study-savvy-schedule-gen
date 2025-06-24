@@ -209,16 +209,34 @@ const Dashboard: React.FC<DashboardProps> = ({
         onUserUpdate={onUserUpdate}
       />
 
+      {/* Subject Form Modal - Fixed with proper accessibility and z-index */}
       {showSubjectForm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+        <div 
+          className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-[100]"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="subject-form-title"
+          onClick={(e) => {
+            // Close modal when clicking backdrop
+            if (e.target === e.currentTarget) {
+              onCloseSubjectForm();
+            }
+          }}
+        >
           <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-md h-[90vh] max-h-[600px] flex flex-col overflow-hidden shadow-3d card-3d">
             <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 bg-white dark:bg-gray-800">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Add New Subject</h3>
+              <h3 
+                id="subject-form-title"
+                className="text-lg font-semibold text-gray-900 dark:text-gray-100"
+              >
+                Add New Subject
+              </h3>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={onCloseSubjectForm}
                 className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 h-8 w-8 p-0 btn-3d"
+                aria-label="Close dialog"
               >
                 ×
               </Button>

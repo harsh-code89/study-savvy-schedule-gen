@@ -59,17 +59,33 @@ export const useAuth = () => {
         // Send custom verification email
         try {
           const confirmationUrl = `${window.location.origin}/?confirmed=true`;
-          await supabase.functions.invoke('send-verification-email', {
+          const response = await supabase.functions.invoke('send-verification-email', {
             body: {
               email: data.user.email,
               confirmationUrl,
               type: 'signup'
             }
           });
-          console.log('Custom verification email sent');
+          
+          if (response.error) {
+            console.error('Failed to send custom verification email:', response.error);
+            // Don't fail signup if email sending fails, just log the error
+            return { 
+              data, 
+              error: null, 
+              emailError: `Email verification may not work: ${response.error.message}` 
+            };
+          }
+          
+          console.log('Custom verification email sent successfully');
         } catch (emailError) {
           console.error('Failed to send custom verification email:', emailError);
           // Don't fail the signup if email sending fails
+          return { 
+            data, 
+            error: null, 
+            emailError: 'Email verification setup failed, but account was created' 
+          };
         }
       }
 
@@ -128,14 +144,19 @@ export const useAuth = () => {
       
       if (!error) {
         // Also send our custom email
-        const confirmationUrl = `${window.location.origin}/?confirmed=true`;
-        await supabase.functions.invoke('send-verification-email', {
-          body: {
-            email,
-            confirmationUrl,
-            type: 'signup'
-          }
-        });
+        try {
+          const confirmationUrl = `${window.location.origin}/?confirmed=true`;
+          await supabase.functions.invoke('send-verification-email', {
+            body: {
+              email,
+              confirmationUrl,
+              type: 'signup'
+            }
+          });
+        } catch (emailError) {
+          console.error('Custom email failed:', emailError);
+          // Don't fail if custom email fails
+        }
       }
       
       return { error };
