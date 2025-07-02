@@ -114,7 +114,6 @@
   body {
     @apply bg-background text-foreground;
     transition: background-color 0.3s ease, color 0.3s ease;
-    perspective: 1000px;
   }
 
   /* Ensure smooth transitions for theme changes */
@@ -123,33 +122,25 @@
   }
 }
 
-/* 3D Enhancement Utilities */
+/* Professional 3D Enhancement Utilities */
 @layer utilities {
-  /* 3D Perspective Container */
-  .perspective-container {
-    perspective: 1000px;
-    transform-style: preserve-3d;
-  }
-
-  /* 3D Card Effects */
+  /* Subtle 3D Card Effects */
   .card-3d {
     transform-style: preserve-3d;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 
       0 4px 6px -1px rgba(0, 0, 0, 0.1),
-      0 2px 4px -1px rgba(0, 0, 0, 0.06),
-      0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+      0 2px 4px -1px rgba(0, 0, 0, 0.06);
   }
 
   .card-3d:hover {
-    transform: translateY(-8px) rotateX(5deg) rotateY(5deg);
+    transform: translateY(-4px) rotateX(2deg);
     box-shadow: 
-      0 25px 50px -12px rgba(0, 0, 0, 0.25),
-      0 0 0 1px rgba(255, 255, 255, 0.1) inset,
-      0 1px 0 0 rgba(255, 255, 255, 0.2) inset;
+      0 20px 25px -5px rgba(0, 0, 0, 0.1),
+      0 10px 10px -5px rgba(0, 0, 0, 0.04);
   }
 
-  /* Interactive 3D Button */
+  /* Professional Button 3D */
   .btn-3d {
     transform-style: preserve-3d;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -157,105 +148,53 @@
   }
 
   .btn-3d:hover {
-    transform: translateY(-2px) rotateX(5deg);
+    transform: translateY(-1px);
   }
 
   .btn-3d:active {
-    transform: translateY(0) rotateX(0deg);
+    transform: translateY(0);
   }
 
-  /* 3D Logo Animation */
+  /* Subtle Logo Animation */
   .logo-3d {
     transform-style: preserve-3d;
-    animation: rotate3d 8s ease-in-out infinite;
+    animation: subtleRotate 12s ease-in-out infinite;
   }
 
-  @keyframes rotate3d {
-    0%, 100% { transform: rotateY(0deg) rotateX(0deg); }
-    25% { transform: rotateY(15deg) rotateX(5deg); }
-    50% { transform: rotateY(0deg) rotateX(10deg); }
-    75% { transform: rotateY(-15deg) rotateX(5deg); }
+  @keyframes subtleRotate {
+    0%, 100% { transform: rotateY(0deg); }
+    50% { transform: rotateY(5deg); }
   }
 
-  /* Floating 3D Elements */
+  /* Gentle Floating Elements */
   .float-3d {
-    animation: float3d 6s ease-in-out infinite;
+    animation: gentleFloat 8s ease-in-out infinite;
   }
 
-  @keyframes float3d {
-    0%, 100% { transform: translateY(0) rotateZ(0deg); }
-    50% { transform: translateY(-10px) rotateZ(2deg); }
+  @keyframes gentleFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
   }
 
-  /* 3D Text Effect */
-  .text-3d {
-    text-shadow: 
-      0 1px 0 #ccc,
-      0 2px 0 #c9c9c9,
-      0 3px 0 #bbb,
-      0 4px 0 #b9b9b9,
-      0 5px 0 #aaa,
-      0 6px 1px rgba(0,0,0,.1),
-      0 0 5px rgba(0,0,0,.1),
-      0 1px 3px rgba(0,0,0,.3),
-      0 3px 5px rgba(0,0,0,.2),
-      0 5px 10px rgba(0,0,0,.25);
-  }
-
-  /* 3D Calendar Grid */
-  .calendar-3d {
-    transform-style: preserve-3d;
-    perspective: 800px;
-  }
-
-  .calendar-item-3d {
-    transform-style: preserve-3d;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    backface-visibility: hidden;
-  }
-
-  .calendar-item-3d:hover {
-    transform: translateZ(20px) rotateX(10deg);
-  }
-
-  /* 3D Progress Elements */
-  .progress-3d {
-    transform-style: preserve-3d;
-    transform: rotateX(15deg);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-  }
-
-  /* Layered Shadows for Depth */
+  /* Professional Shadows for Depth */
   .shadow-3d {
     box-shadow: 
       0 1px 3px rgba(0,0,0,0.12),
-      0 1px 2px rgba(0,0,0,0.24),
-      0 4px 8px rgba(0,0,0,0.12),
-      0 8px 16px rgba(0,0,0,0.08);
+      0 1px 2px rgba(0,0,0,0.24);
   }
 
   .shadow-3d-hover:hover {
     box-shadow: 
       0 4px 6px rgba(0,0,0,0.07),
       0 2px 4px rgba(0,0,0,0.06),
-      0 8px 25px rgba(0,0,0,0.12),
-      0 16px 35px rgba(0,0,0,0.08);
+      0 8px 25px rgba(0,0,0,0.12);
   }
 
-  /* 3D Navigation Tabs */
-  .nav-3d {
-    transform-style: preserve-3d;
-    transform: rotateX(10deg);
-    transform-origin: bottom;
-  }
-
-  .nav-item-3d {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    transform-style: preserve-3d;
-  }
-
-  .nav-item-3d.active {
-    transform: translateZ(10px) rotateX(-5deg);
+  /* Modal and Dialog Z-Index Fix */
+  .modal-3d {
+    z-index: 9999 !important;
+    position: fixed;
+    backdrop-filter: blur(8px);
   }
 
   /* Particle Background */
@@ -271,12 +210,12 @@
 
   .particle {
     position: absolute;
-    width: 4px;
-    height: 4px;
+    width: 2px;
+    height: 2px;
     background: linear-gradient(45deg, #8B5CF6, #7E69AB);
     border-radius: 50%;
-    animation: particleFloat 20s linear infinite;
-    opacity: 0.6;
+    animation: particleFloat 25s linear infinite;
+    opacity: 0.3;
   }
 
   @keyframes particleFloat {
@@ -285,10 +224,10 @@
       opacity: 0;
     }
     10% {
-      opacity: 0.6;
+      opacity: 0.3;
     }
     90% {
-      opacity: 0.6;
+      opacity: 0.3;
     }
     100% {
       transform: translateY(-100px) rotate(360deg);
@@ -314,11 +253,17 @@
 /* Responsive 3D - Disable on mobile for performance */
 @media (max-width: 768px) {
   .card-3d:hover {
-    transform: translateY(-4px) rotateX(2deg) rotateY(2deg);
+    transform: translateY(-2px);
   }
   
   .btn-3d:hover {
-    transform: translateY(-1px) rotateX(2deg);
+    transform: translateY(-0.5px);
+  }
+  
+  .logo-3d,
+  .float-3d,
+  .particle {
+    animation: none;
   }
 }
 
@@ -331,8 +276,7 @@
   }
   
   .card-3d:hover,
-  .btn-3d:hover,
-  .calendar-item-3d:hover {
+  .btn-3d:hover {
     transform: none;
   }
 }
