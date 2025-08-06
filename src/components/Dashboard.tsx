@@ -4,7 +4,7 @@ import DashboardTabs from '@/components/DashboardTabs';
 import ProfileSetup from '@/components/profile/ProfileSetup';
 import SettingsModal from '@/components/settings/SettingsModal';
 import ParticleBackground from '@/components/ParticleBackground';
-import DashboardHeader from '@/components/dashboard/DashboardHeader';
+import Navigation from '@/components/Navigation';
 import WelcomeSection from '@/components/dashboard/WelcomeSection';
 import SubjectFormModal from '@/components/dashboard/SubjectFormModal';
 import { StudySession } from '@/types/studyPlanner';
@@ -62,13 +62,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-indigo-50 to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <ParticleBackground />
-      
-      <DashboardHeader
-        user={user}
-        onLogout={onLogout}
-        onShowSettings={onShowSettings}
-        onProfileClick={handleProfileClick}
-      />
+      <Navigation />
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
