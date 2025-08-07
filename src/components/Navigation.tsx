@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
-import { NotebookPen, Crown, User, LogOut, Settings } from 'lucide-react';
+import { NotebookPen, Crown, User, LogOut, Settings, CheckSquare, BookOpen, PenTool, Calendar, Grid } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 const Navigation = () => {
@@ -51,6 +51,20 @@ const Navigation = () => {
             </NavLink>
             
             <NavLink
+              to="/tasks"
+              className={({ isActive }) =>
+                `px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-2 ${
+                  isActive
+                    ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-lg'
+                    : 'text-gray-700 hover:bg-gray-100 hover:text-purple-600'
+                }`
+              }
+            >
+              <CheckSquare className="h-4 w-4" />
+              <span>Tasks</span>
+            </NavLink>
+            
+            <NavLink
               to="/notes"
               className={({ isActive }) =>
                 `px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-2 ${
@@ -61,7 +75,49 @@ const Navigation = () => {
               }
             >
               <NotebookPen className="h-4 w-4" />
-              <span>Take Notes</span>
+              <span>Notes</span>
+            </NavLink>
+
+            <NavLink
+              to="/journal"
+              className={({ isActive }) =>
+                `px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-2 ${
+                  isActive
+                    ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-lg'
+                    : 'text-gray-700 hover:bg-gray-100 hover:text-purple-600'
+                }`
+              }
+            >
+              <PenTool className="h-4 w-4" />
+              <span>Journal</span>
+            </NavLink>
+
+            <NavLink
+              to="/mindmaps"
+              className={({ isActive }) =>
+                `px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-2 ${
+                  isActive
+                    ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-lg'
+                    : 'text-gray-700 hover:bg-gray-100 hover:text-purple-600'
+                }`
+              }
+            >
+              <Grid className="h-4 w-4" />
+              <span>Mind Maps</span>
+            </NavLink>
+
+            <NavLink
+              to="/planner"
+              className={({ isActive }) =>
+                `px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-2 ${
+                  isActive
+                    ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-lg'
+                    : 'text-gray-700 hover:bg-gray-100 hover:text-purple-600'
+                }`
+              }
+            >
+              <Calendar className="h-4 w-4" />
+              <span>Planner</span>
             </NavLink>
 
             <NavLink
@@ -143,9 +199,33 @@ const Navigation = () => {
                   </NavLink>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
+                  <NavLink to="/tasks" className="flex items-center cursor-pointer">
+                    <CheckSquare className="mr-2 h-4 w-4" />
+                    Tasks
+                  </NavLink>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
                   <NavLink to="/notes" className="flex items-center cursor-pointer">
                     <NotebookPen className="mr-2 h-4 w-4" />
-                    Take Notes
+                    Notes
+                  </NavLink>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <NavLink to="/journal" className="flex items-center cursor-pointer">
+                    <PenTool className="mr-2 h-4 w-4" />
+                    Journal
+                  </NavLink>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <NavLink to="/mindmaps" className="flex items-center cursor-pointer">
+                    <Grid className="mr-2 h-4 w-4" />
+                    Mind Maps
+                  </NavLink>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <NavLink to="/planner" className="flex items-center cursor-pointer">
+                    <Calendar className="mr-2 h-4 w-4" />
+                    Planner
                   </NavLink>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
