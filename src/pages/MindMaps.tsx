@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -284,6 +284,30 @@ const MindMaps = () => {
     setEdges((eds) => eds.filter(edge => edge.source !== nodeId && edge.target !== nodeId));
   };
 
+  // Memoized node types to prevent React Flow warnings
+  const nodeTypes = useMemo(() => ({
+    default: ({ data, selected }: { data: any; selected: boolean }) => (
+      <NodeContextMenu
+        onEdit={() => editNodeLabel(data.nodeId)}
+        onDelete={() => deleteNode(data.nodeId)}
+        onColorChange={(color: string) => updateNodeColor(data.nodeId, color)}
+        currentColor={data.color || '#6B7280'}
+      >
+        <div 
+          className={`px-3 py-2 rounded-lg border-2 text-white text-sm font-medium cursor-pointer ${
+            selected ? 'ring-2 ring-blue-400' : ''
+          }`}
+          style={{
+            backgroundColor: data.color || '#6B7280',
+            borderColor: data.color || '#6B7280',
+          }}
+        >
+          {data.label}
+        </div>
+      </NodeContextMenu>
+    )
+  }), []);
+
   const onNodeDoubleClick = (event: React.MouseEvent, node: Node) => {
     const newLabel = prompt('Enter new label:', String(node.data.label || ''));
     if (newLabel !== null) {
@@ -520,9 +544,7 @@ const MindMaps = () => {
                           ...node,
                           data: {
                             ...node.data,
-                            onColorChange: (color: string) => updateNodeColor(node.id, color),
-                            onEdit: () => editNodeLabel(node.id),
-                            onDelete: () => deleteNode(node.id),
+                            nodeId: node.id,
                           }
                         }))}
                         edges={edges}
@@ -532,28 +554,7 @@ const MindMaps = () => {
                         onNodeDoubleClick={onNodeDoubleClick}
                         fitView
                         attributionPosition="bottom-left"
-                        nodeTypes={{
-                          default: ({ data, selected, ...props }) => (
-                            <NodeContextMenu
-                              onEdit={data.onEdit}
-                              onDelete={data.onDelete}
-                              onColorChange={data.onColorChange}
-                              currentColor={data.color || '#6B7280'}
-                            >
-                              <div 
-                                className={`px-3 py-2 rounded-lg border-2 text-white text-sm font-medium ${
-                                  selected ? 'ring-2 ring-blue-400' : ''
-                                }`}
-                                style={{
-                                  backgroundColor: data.color || '#6B7280',
-                                  borderColor: data.color || '#6B7280',
-                                }}
-                              >
-                                {data.label}
-                              </div>
-                            </NodeContextMenu>
-                          )
-                        }}
+                        nodeTypes={nodeTypes}
                       >
                         <MiniMap
                           zoomable
