@@ -22,6 +22,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import Navigation from '@/components/Navigation';
 import ParticleBackground from '@/components/ParticleBackground';
+import { NodeContextMenu } from '@/components/mindmaps/NodeContextMenu';
+import { ColorPicker } from '@/components/mindmaps/ColorPicker';
 import { toast } from 'sonner';
 
 interface MindMap {
@@ -39,11 +41,11 @@ const initialNodes: Node[] = [
     id: '1',
     type: 'default',
     position: { x: 250, y: 150 },
-    data: { label: 'Central Idea' },
+    data: { label: 'Central Idea', color: 'hsl(var(--primary))' },
     style: {
-      background: '#8B5CF6',
+      background: 'hsl(var(--primary))',
       color: 'white',
-      border: '2px solid #7C3AED',
+      border: '2px solid hsl(var(--primary))',
       borderRadius: '8px',
       fontSize: '14px',
       fontWeight: 'bold',
@@ -220,6 +222,7 @@ const MindMaps = () => {
   );
 
   const addNode = () => {
+    const defaultColor = '#6B7280';
     const newNode: Node = {
       id: nodeIdCounter.toString(),
       type: 'default',
@@ -227,11 +230,11 @@ const MindMaps = () => {
         x: Math.random() * 400 + 100,
         y: Math.random() * 300 + 100,
       },
-      data: { label: 'New Idea' },
+      data: { label: 'New Idea', color: defaultColor },
       style: {
-        background: '#F3F4F6',
-        color: '#374151',
-        border: '2px solid #D1D5DB',
+        background: defaultColor,
+        color: 'white',
+        border: `2px solid ${defaultColor}`,
         borderRadius: '8px',
         fontSize: '14px',
       },
@@ -239,6 +242,46 @@ const MindMaps = () => {
 
     setNodes((nds) => [...nds, newNode]);
     setNodeIdCounter(nodeIdCounter + 1);
+  };
+
+  const updateNodeColor = (nodeId: string, color: string) => {
+    setNodes((nds) =>
+      nds.map((node) =>
+        node.id === nodeId
+          ? {
+              ...node,
+              data: { ...node.data, color },
+              style: {
+                ...node.style,
+                background: color,
+                border: `2px solid ${color}`,
+                color: 'white',
+              },
+            }
+          : node
+      )
+    );
+  };
+
+  const editNodeLabel = (nodeId: string) => {
+    const node = nodes.find(n => n.id === nodeId);
+    if (!node) return;
+    
+    const newLabel = prompt('Enter new label:', String(node.data.label || ''));
+    if (newLabel !== null) {
+      setNodes((nds) =>
+        nds.map((n) =>
+          n.id === nodeId
+            ? { ...n, data: { ...n.data, label: newLabel } }
+            : n
+        )
+      );
+    }
+  };
+
+  const deleteNode = (nodeId: string) => {
+    setNodes((nds) => nds.filter(node => node.id !== nodeId));
+    setEdges((eds) => eds.filter(edge => edge.source !== nodeId && edge.target !== nodeId));
   };
 
   const onNodeDoubleClick = (event: React.MouseEvent, node: Node) => {
@@ -306,20 +349,38 @@ const MindMaps = () => {
                 New Mind Map
               </Button>
               {selectedMindMap && (
-                <>
-                  <Button onClick={addNode} variant="outline">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Node
-                  </Button>
-                  <Button onClick={saveMindMap} variant="outline">
-                    <Save className="h-4 w-4 mr-2" />
-                    Save
-                  </Button>
-                  <Button onClick={exportMindMap} variant="outline">
-                    <Download className="h-4 w-4 mr-2" />
-                    Export
-                  </Button>
-                </>
+                <div className="flex items-center gap-4">
+                  <div className="flex gap-2">
+                    <Button onClick={addNode} variant="outline">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Node
+                    </Button>
+                    <Button onClick={saveMindMap} variant="outline">
+                      <Save className="h-4 w-4 mr-2" />
+                      Save
+                    </Button>
+                    <Button onClick={exportMindMap} variant="outline">
+                      <Download className="h-4 w-4 mr-2" />
+                      Export
+                    </Button>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">Quick Colors:</span>
+                    {['hsl(var(--primary))', '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#EC4899'].map((color, index) => (
+                      <Button
+                        key={index}
+                        variant="outline"
+                        size="sm"
+                        className="h-7 w-7 p-0 border-2"
+                        style={{ backgroundColor: color }}
+                        onClick={() => {
+                          toast.info('Right-click a node to change its color, or use the context menu');
+                        }}
+                        title={`${color} - Right-click nodes to apply colors`}
+                      />
+                    ))}
+                  </div>
+                </div>
               )}
             </div>
           </div>
@@ -455,7 +516,15 @@ const MindMaps = () => {
                   {selectedMindMap ? (
                     <div className="h-[600px] w-full" ref={reactFlowWrapper}>
                       <ReactFlow
-                        nodes={nodes}
+                        nodes={nodes.map(node => ({
+                          ...node,
+                          data: {
+                            ...node.data,
+                            onColorChange: (color: string) => updateNodeColor(node.id, color),
+                            onEdit: () => editNodeLabel(node.id),
+                            onDelete: () => deleteNode(node.id),
+                          }
+                        }))}
                         edges={edges}
                         onNodesChange={onNodesChange}
                         onEdgesChange={onEdgesChange}
@@ -463,6 +532,28 @@ const MindMaps = () => {
                         onNodeDoubleClick={onNodeDoubleClick}
                         fitView
                         attributionPosition="bottom-left"
+                        nodeTypes={{
+                          default: ({ data, selected, ...props }) => (
+                            <NodeContextMenu
+                              onEdit={data.onEdit}
+                              onDelete={data.onDelete}
+                              onColorChange={data.onColorChange}
+                              currentColor={data.color || '#6B7280'}
+                            >
+                              <div 
+                                className={`px-3 py-2 rounded-lg border-2 text-white text-sm font-medium ${
+                                  selected ? 'ring-2 ring-blue-400' : ''
+                                }`}
+                                style={{
+                                  backgroundColor: data.color || '#6B7280',
+                                  borderColor: data.color || '#6B7280',
+                                }}
+                              >
+                                {data.label}
+                              </div>
+                            </NodeContextMenu>
+                          )
+                        }}
                       >
                         <MiniMap
                           zoomable
