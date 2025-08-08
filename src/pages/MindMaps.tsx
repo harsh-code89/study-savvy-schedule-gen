@@ -103,8 +103,8 @@ const MindMaps = () => {
           user_id: user?.id,
           title: newMindMap.title,
           description: newMindMap.description || null,
-          nodes_data: initialNodes,
-          edges_data: [],
+          nodes_data: initialNodes as any,
+          edges_data: [] as any,
         }])
         .select()
         .single();
@@ -132,8 +132,8 @@ const MindMaps = () => {
       const { error } = await supabase
         .from('mind_maps')
         .update({
-          nodes_data: nodes,
-          edges_data: edges,
+          nodes_data: nodes as any,
+          edges_data: edges as any,
         })
         .eq('id', selectedMindMap.id);
 
@@ -242,7 +242,7 @@ const MindMaps = () => {
   };
 
   const onNodeDoubleClick = (event: React.MouseEvent, node: Node) => {
-    const newLabel = prompt('Enter new label:', node.data.label);
+    const newLabel = prompt('Enter new label:', String(node.data.label || ''));
     if (newLabel !== null) {
       setNodes((nds) =>
         nds.map((n) =>
