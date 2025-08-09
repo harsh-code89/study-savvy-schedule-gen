@@ -28,8 +28,15 @@ export function NodeContextMenu({
           <Edit className="w-4 h-4 mr-2" />
           Edit Label
         </ContextMenuItem>
-        <ContextMenuItem className="cursor-pointer p-0" onSelect={(e) => e.preventDefault()}>
-          <div className="flex items-center w-full px-2 py-1.5">
+        <ContextMenuItem 
+          className="cursor-pointer p-0" 
+          onSelect={(e) => e.preventDefault()}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div 
+            className="flex items-center w-full px-2 py-1.5"
+            onClick={(e) => e.stopPropagation()}
+          >
             <Palette className="w-4 h-4 mr-2" />
             <span className="mr-2">Color</span>
             <ColorPicker 

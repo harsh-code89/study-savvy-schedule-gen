@@ -34,7 +34,13 @@ export function ColorPicker({ selectedColor, onColorChange }: ColorPickerProps) 
           <Palette className="h-3 w-3" style={{ color: selectedColor === '#FFFFFF' ? '#000' : '#fff' }} />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-52 p-3" align="start" onClick={(e) => e.stopPropagation()}>
+      <PopoverContent 
+        className="w-52 p-3 z-50" 
+        align="start" 
+        onClick={(e) => e.stopPropagation()}
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+      >
         <div className="space-y-2">
           <h4 className="text-sm font-medium">Choose Color</h4>
           <div className="grid grid-cols-3 gap-2">
