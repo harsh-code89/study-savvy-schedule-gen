@@ -29,11 +29,12 @@ export function ColorPicker({ selectedColor, onColorChange }: ColorPickerProps) 
           size="sm" 
           className="h-8 w-8 p-0 border-2"
           style={{ backgroundColor: selectedColor }}
+          onClick={(e) => e.stopPropagation()}
         >
           <Palette className="h-3 w-3" style={{ color: selectedColor === '#FFFFFF' ? '#000' : '#fff' }} />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-52 p-3" align="start">
+      <PopoverContent className="w-52 p-3" align="start" onClick={(e) => e.stopPropagation()}>
         <div className="space-y-2">
           <h4 className="text-sm font-medium">Choose Color</h4>
           <div className="grid grid-cols-3 gap-2">
@@ -45,7 +46,10 @@ export function ColorPicker({ selectedColor, onColorChange }: ColorPickerProps) 
                 className={`h-8 w-full ${color.bg} border-2 ${
                   selectedColor === color.value ? 'ring-2 ring-ring' : ''
                 }`}
-                onClick={() => onColorChange(color.value)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onColorChange(color.value);
+                }}
                 title={color.name}
               >
                 <span className="sr-only">{color.name}</span>
