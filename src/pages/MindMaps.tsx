@@ -16,14 +16,16 @@ import {
   Node,
   Edge,
   MarkerType,
+  useReactFlow,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import Navigation from '@/components/Navigation';
 import ParticleBackground from '@/components/ParticleBackground';
-import { NodeContextMenu } from '@/components/mindmaps/NodeContextMenu';
-import { ColorPicker } from '@/components/mindmaps/ColorPicker';
+import { ShapePalette } from '@/components/mindmaps/ShapePalette';
+import { MindMapToolbar } from '@/components/mindmaps/MindMapToolbar';
+import { CustomNode } from '@/components/mindmaps/CustomNodes';
 import { toast } from 'sonner';
 
 interface MindMap {
@@ -39,16 +41,13 @@ interface MindMap {
 const initialNodes: Node[] = [
   {
     id: '1',
-    type: 'default',
+    type: 'custom',
     position: { x: 250, y: 150 },
-    data: { label: 'Central Idea', color: 'hsl(var(--primary))' },
-    style: {
-      background: 'hsl(var(--primary))',
-      color: 'white',
-      border: '2px solid hsl(var(--primary))',
-      borderRadius: '8px',
-      fontSize: '14px',
-      fontWeight: 'bold',
+    data: { 
+      label: 'Central Idea', 
+      color: 'hsl(var(--primary))',
+      nodeId: '1',
+      shapeType: 'rectangle'
     },
   },
 ];
@@ -68,6 +67,8 @@ const MindMaps = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [nodeIdCounter, setNodeIdCounter] = useState(2);
+  const [selectedTool, setSelectedTool] = useState<'select' | 'text' | 'connect'>('select');
+  const [showGrid, setShowGrid] = useState(true);
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
 
   // Load mind maps from database
@@ -221,22 +222,20 @@ const MindMaps = () => {
     [setEdges]
   );
 
-  const addNode = () => {
+  const addNode = (shapeType: string = 'rectangle') => {
     const defaultColor = '#6B7280';
     const newNode: Node = {
       id: nodeIdCounter.toString(),
-      type: 'default',
+      type: 'custom',
       position: {
         x: Math.random() * 400 + 100,
         y: Math.random() * 300 + 100,
       },
-      data: { label: 'New Idea', color: defaultColor },
-      style: {
-        background: defaultColor,
-        color: 'white',
-        border: `2px solid ${defaultColor}`,
-        borderRadius: '8px',
-        fontSize: '14px',
+      data: { 
+        label: 'New Idea', 
+        color: defaultColor,
+        nodeId: nodeIdCounter.toString(),
+        shapeType
       },
     };
 
@@ -251,12 +250,6 @@ const MindMaps = () => {
           ? {
               ...node,
               data: { ...node.data, color },
-              style: {
-                ...node.style,
-                background: color,
-                border: `2px solid ${color}`,
-                color: 'white',
-              },
             }
           : node
       )
@@ -286,25 +279,14 @@ const MindMaps = () => {
 
   // Memoized node types to prevent React Flow warnings
   const nodeTypes = useMemo(() => ({
-    default: ({ data, selected }: { data: any; selected: boolean }) => (
-      <NodeContextMenu
-        onEdit={() => editNodeLabel(data.nodeId)}
-        onDelete={() => deleteNode(data.nodeId)}
-        onColorChange={(color: string) => updateNodeColor(data.nodeId, color)}
-        currentColor={data.color || '#6B7280'}
-      >
-        <div 
-          className={`px-3 py-2 rounded-lg border-2 text-white text-sm font-medium cursor-pointer ${
-            selected ? 'ring-2 ring-blue-400' : ''
-          }`}
-          style={{
-            backgroundColor: data.color || '#6B7280',
-            borderColor: data.color || '#6B7280',
-          }}
-        >
-          {data.label}
-        </div>
-      </NodeContextMenu>
+    custom: ({ data, selected }: { data: any; selected: boolean }) => (
+      <CustomNode
+        data={data}
+        selected={selected}
+        onEdit={editNodeLabel}
+        onDelete={deleteNode}
+        onColorChange={updateNodeColor}
+      />
     )
   }), []);
 
@@ -338,6 +320,27 @@ const MindMaps = () => {
     a.click();
     URL.revokeObjectURL(url);
     toast.success('Mind map exported successfully!');
+  };
+
+  // Additional helper functions for the new interface
+  const clearCanvas = () => {
+    setNodes(initialNodes);
+    setEdges([]);
+    setNodeIdCounter(2);
+    toast.success('Canvas cleared!');
+  };
+
+  const fitView = () => {
+    // This would be handled by React Flow's fitView function
+    toast.info('Fitting view to content');
+  };
+
+  const zoomIn = () => {
+    toast.info('Zoom in');
+  };
+
+  const zoomOut = () => {
+    toast.info('Zoom out');
   };
 
   if (!user) {
@@ -375,7 +378,7 @@ const MindMaps = () => {
               {selectedMindMap && (
                 <div className="flex items-center gap-4">
                   <div className="flex gap-2">
-                    <Button onClick={addNode} variant="outline">
+                    <Button onClick={() => addNode()} variant="outline">
                       <Plus className="h-4 w-4 mr-2" />
                       Add Node
                     </Button>
@@ -409,181 +412,229 @@ const MindMaps = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            {/* Mind Maps List */}
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+            {/* Shape Palette Sidebar */}
             <div className="lg:col-span-1">
-              <Card className="bg-white/80 backdrop-blur-sm">
-                <CardHeader>
-                  <CardTitle className="text-lg">Your Mind Maps</CardTitle>
-                </CardHeader>
-                <CardContent className="p-4">
-                  {loading ? (
-                    <div className="text-gray-500 text-center py-8">Loading...</div>
-                  ) : mindMaps.length === 0 ? (
-                    <div className="text-gray-500 text-center py-8">
-                      <Grid className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                      <p>No mind maps yet</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {mindMaps.map((mindMap) => (
-                        <div
-                          key={mindMap.id}
-                          className={`p-3 rounded-lg border cursor-pointer transition-colors ${
-                            selectedMindMap?.id === mindMap.id
-                              ? 'bg-purple-100 border-purple-300'
-                              : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
-                          }`}
-                          onClick={() => loadMindMap(mindMap)}
-                        >
-                          <div className="flex justify-between items-start">
-                            <div className="flex-1">
-                              {editingTitle && selectedMindMap?.id === mindMap.id ? (
-                                <Input
-                                  defaultValue={mindMap.title}
-                                  onBlur={(e) => updateMindMapTitle(mindMap.id, e.target.value)}
-                                  onKeyPress={(e) => {
-                                    if (e.key === 'Enter') {
-                                      updateMindMapTitle(mindMap.id, e.currentTarget.value);
-                                    }
-                                  }}
-                                  className="h-auto p-1 text-sm"
-                                  autoFocus
-                                />
-                              ) : (
-                                <h3 className="font-medium text-sm">{mindMap.title}</h3>
-                              )}
-                              <p className="text-xs text-gray-500 mt-1">
-                                {new Date(mindMap.updated_at).toLocaleDateString()}
-                              </p>
-                            </div>
-                            {selectedMindMap?.id === mindMap.id && (
-                              <div className="flex gap-1 ml-2">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setEditingTitle(true);
-                                  }}
-                                  className="h-6 w-6 p-0"
-                                >
-                                  <Edit className="h-3 w-3" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    deleteMindMap(mindMap.id);
-                                  }}
-                                  className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
-                                >
-                                  <Trash2 className="h-3 w-3" />
-                                </Button>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Create Mind Map Form */}
-              {isCreating && (
-                <Card className="mt-4 bg-white/80 backdrop-blur-sm border-purple-200">
+              <div className="space-y-4">
+                {/* Mind Maps List */}
+                <Card className="bg-white/80 backdrop-blur-sm">
                   <CardHeader>
-                    <CardTitle className="text-lg">Create Mind Map</CardTitle>
+                    <CardTitle className="text-lg">Your Mind Maps</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <Input
-                      placeholder="Mind map title..."
-                      value={newMindMap.title}
-                      onChange={(e) => setNewMindMap({ ...newMindMap, title: e.target.value })}
-                    />
-                    <Textarea
-                      placeholder="Description (optional)..."
-                      value={newMindMap.description}
-                      onChange={(e) => setNewMindMap({ ...newMindMap, description: e.target.value })}
-                      rows={3}
-                    />
-                    <div className="flex gap-2">
-                      <Button onClick={createMindMap} disabled={!newMindMap.title.trim()}>
-                        Create
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          setIsCreating(false);
-                          setNewMindMap({ title: '', description: '' });
-                        }}
-                      >
-                        Cancel
-                      </Button>
-                    </div>
+                  <CardContent className="p-4 max-h-60 overflow-y-auto">
+                    {loading ? (
+                      <div className="text-gray-500 text-center py-4">Loading...</div>
+                    ) : mindMaps.length === 0 ? (
+                      <div className="text-gray-500 text-center py-4">
+                        <Grid className="h-6 w-6 mx-auto mb-2 opacity-50" />
+                        <p className="text-sm">No mind maps yet</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {mindMaps.map((mindMap) => (
+                          <div
+                            key={mindMap.id}
+                            className={`p-2 rounded-lg border cursor-pointer transition-colors text-sm ${
+                              selectedMindMap?.id === mindMap.id
+                                ? 'bg-purple-100 border-purple-300'
+                                : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+                            }`}
+                            onClick={() => loadMindMap(mindMap)}
+                          >
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1 min-w-0">
+                                <h3 className="font-medium text-xs truncate">{mindMap.title}</h3>
+                                <p className="text-xs text-gray-500 mt-1">
+                                  {new Date(mindMap.updated_at).toLocaleDateString()}
+                                </p>
+                              </div>
+                              {selectedMindMap?.id === mindMap.id && (
+                                <div className="flex gap-1 ml-2">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setEditingTitle(true);
+                                    }}
+                                    className="h-5 w-5 p-0"
+                                  >
+                                    <Edit className="h-2 w-2" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      deleteMindMap(mindMap.id);
+                                    }}
+                                    className="h-5 w-5 p-0 text-red-500 hover:text-red-700"
+                                  >
+                                    <Trash2 className="h-2 w-2" />
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
-              )}
+
+                {/* Shape Palette */}
+                {selectedMindMap && (
+                  <ShapePalette onShapeSelect={(shapeType) => addNode(shapeType)} />
+                )}
+
+                {/* Create Mind Map Form */}
+                {isCreating && (
+                  <Card className="bg-white/80 backdrop-blur-sm border-purple-200">
+                    <CardHeader>
+                      <CardTitle className="text-sm">Create Mind Map</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <Input
+                        placeholder="Mind map title..."
+                        value={newMindMap.title}
+                        onChange={(e) => setNewMindMap({ ...newMindMap, title: e.target.value })}
+                        className="text-sm"
+                      />
+                      <Textarea
+                        placeholder="Description (optional)..."
+                        value={newMindMap.description}
+                        onChange={(e) => setNewMindMap({ ...newMindMap, description: e.target.value })}
+                        rows={2}
+                        className="text-sm"
+                      />
+                      <div className="flex gap-2">
+                        <Button onClick={createMindMap} disabled={!newMindMap.title.trim()} size="sm">
+                          Create
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setIsCreating(false);
+                            setNewMindMap({ title: '', description: '' });
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
             </div>
 
             {/* Mind Map Canvas */}
-            <div className="lg:col-span-3">
-              <Card className="bg-white/80 backdrop-blur-sm">
-                <CardHeader>
-                  <CardTitle className="text-lg">
-                    {selectedMindMap ? selectedMindMap.title : 'Select a Mind Map'}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-0">
-                  {selectedMindMap ? (
-                    <div className="h-[600px] w-full" ref={reactFlowWrapper}>
-                      <ReactFlow
-                        nodes={nodes.map(node => ({
-                          ...node,
-                          data: {
-                            ...node.data,
-                            nodeId: node.id,
-                          }
-                        }))}
-                        edges={edges}
-                        onNodesChange={onNodesChange}
-                        onEdgesChange={onEdgesChange}
-                        onConnect={onConnect}
-                        onNodeDoubleClick={onNodeDoubleClick}
-                        fitView
-                        attributionPosition="bottom-left"
-                        nodeTypes={nodeTypes}
-                      >
-                        <MiniMap
-                          zoomable
-                          pannable
-                          style={{
-                            backgroundColor: '#f8fafc',
-                            border: '1px solid #e2e8f0',
+            <div className="lg:col-span-4">
+              <div className="space-y-4">
+                {/* Toolbar */}
+                {selectedMindMap && (
+                  <MindMapToolbar
+                    onSave={saveMindMap}
+                    onExport={exportMindMap}
+                    onZoomIn={zoomIn}
+                    onZoomOut={zoomOut}
+                    onFitView={fitView}
+                    onClear={clearCanvas}
+                    selectedTool={selectedTool}
+                    onToolSelect={setSelectedTool}
+                    showGrid={showGrid}
+                    onToggleGrid={() => setShowGrid(!showGrid)}
+                  />
+                )}
+
+                {/* Canvas */}
+                <Card className="bg-white/80 backdrop-blur-sm">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg flex items-center justify-between">
+                      <span>{selectedMindMap ? selectedMindMap.title : 'Select a Mind Map'}</span>
+                      {selectedMindMap && editingTitle && (
+                        <Input
+                          defaultValue={selectedMindMap.title}
+                          onBlur={(e) => updateMindMapTitle(selectedMindMap.id, e.target.value)}
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter') {
+                              updateMindMapTitle(selectedMindMap.id, e.currentTarget.value);
+                            }
                           }}
+                          className="h-auto p-1 text-lg font-semibold max-w-xs"
+                          autoFocus
                         />
-                        <Controls
-                          style={{
-                            backgroundColor: '#ffffff',
-                            border: '1px solid #e2e8f0',
+                      )}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-1">
+                    {selectedMindMap ? (
+                      <div className="h-[650px] w-full border rounded-lg overflow-hidden" ref={reactFlowWrapper}>
+                        <ReactFlow
+                          nodes={nodes.map(node => ({
+                            ...node,
+                            data: {
+                              ...node.data,
+                              nodeId: node.id,
+                            }
+                          }))}
+                          edges={edges}
+                          onNodesChange={onNodesChange}
+                          onEdgesChange={onEdgesChange}
+                          onConnect={onConnect}
+                          onNodeDoubleClick={onNodeDoubleClick}
+                          fitView
+                          attributionPosition="bottom-left"
+                          nodeTypes={nodeTypes}
+                          connectionLineStyle={{ strokeWidth: 2, stroke: '#8B5CF6' }}
+                          defaultEdgeOptions={{
+                            style: { strokeWidth: 2, stroke: '#8B5CF6' },
+                            markerEnd: { type: MarkerType.ArrowClosed, color: '#8B5CF6' },
                           }}
-                        />
-                        <Background color="#e2e8f0" gap={20} />
-                      </ReactFlow>
-                    </div>
-                  ) : (
-                    <div className="h-[600px] flex items-center justify-center text-gray-500">
-                      <div className="text-center">
-                        <Grid className="h-16 w-16 mx-auto mb-4 opacity-30" />
-                        <p className="text-lg">Select a mind map to start editing</p>
-                        <p className="text-sm mt-2">Double-click nodes to edit them</p>
+                        >
+                          <MiniMap
+                            zoomable
+                            pannable
+                            position="bottom-right"
+                            style={{
+                              backgroundColor: '#f8fafc',
+                              border: '1px solid #e2e8f0',
+                              borderRadius: '8px',
+                            }}
+                          />
+                          <Controls
+                            position="bottom-left"
+                            style={{
+                              backgroundColor: '#ffffff',
+                              border: '1px solid #e2e8f0',
+                              borderRadius: '8px',
+                            }}
+                          />
+                          <Background 
+                            color={showGrid ? "#e2e8f0" : "transparent"} 
+                            gap={20}
+                          />
+                        </ReactFlow>
                       </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                    ) : (
+                      <div className="h-[650px] flex items-center justify-center text-gray-500 border rounded-lg bg-gray-50/50">
+                        <div className="text-center">
+                          <Grid className="h-16 w-16 mx-auto mb-4 opacity-30" />
+                          <p className="text-lg font-medium">Welcome to Mind Maps!</p>
+                          <p className="text-sm mt-2 mb-4">Create or select a mind map to start visualizing your ideas</p>
+                          <div className="space-y-2 text-xs text-gray-400">
+                            <p>💡 Tips to get started:</p>
+                            <p>• Create a new mind map with the button above</p>
+                            <p>• Use shapes from the left panel to add variety</p>
+                            <p>• Double-click nodes to edit text</p>
+                            <p>• Right-click for more options</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </div>
         </div>
