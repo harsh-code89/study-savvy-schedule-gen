@@ -71,6 +71,74 @@ const MindMaps = () => {
   const [showGrid, setShowGrid] = useState(true);
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
 
+  // History management for undo/redo
+  const [history, setHistory] = useState<Array<{ nodes: Node[], edges: Edge[] }>>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+
+  // Save current state to history
+  const saveToHistory = useCallback(() => {
+    const currentState = { nodes, edges };
+    setHistory(prev => {
+      const newHistory = prev.slice(0, historyIndex + 1);
+      newHistory.push(currentState);
+      // Limit history to 50 states
+      if (newHistory.length > 50) {
+        newHistory.shift();
+        return newHistory;
+      }
+      return newHistory;
+    });
+    setHistoryIndex(prev => Math.min(prev + 1, 49));
+  }, [nodes, edges, historyIndex]);
+
+  // Undo function
+  const undo = useCallback(() => {
+    if (historyIndex > 0) {
+      const previousState = history[historyIndex - 1];
+      setNodes(previousState.nodes);
+      setEdges(previousState.edges);
+      setHistoryIndex(prev => prev - 1);
+      toast.success('Undone');
+    }
+  }, [history, historyIndex, setNodes, setEdges]);
+
+  // Redo function
+  const redo = useCallback(() => {
+    if (historyIndex < history.length - 1) {
+      const nextState = history[historyIndex + 1];
+      setNodes(nextState.nodes);
+      setEdges(nextState.edges);
+      setHistoryIndex(prev => prev + 1);
+      toast.success('Redone');
+    }
+  }, [history, historyIndex, setNodes, setEdges]);
+
+  // Initialize history when mind map is loaded
+  useEffect(() => {
+    if (selectedMindMap) {
+      setHistory([{ nodes, edges }]);
+      setHistoryIndex(0);
+    }
+  }, [selectedMindMap]);
+
+  // Keyboard shortcuts for undo/redo
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.ctrlKey || event.metaKey) {
+        if (event.key === 'z' && !event.shiftKey) {
+          event.preventDefault();
+          undo();
+        } else if ((event.key === 'y') || (event.key === 'z' && event.shiftKey)) {
+          event.preventDefault();
+          redo();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [undo, redo]);
+
   // Load mind maps from database
   useEffect(() => {
     if (user) {
@@ -209,6 +277,7 @@ const MindMaps = () => {
 
   const onConnect = useCallback(
     (params: Connection) => {
+      saveToHistory();
       const edge = {
         ...params,
         type: 'smoothstep',
@@ -219,10 +288,11 @@ const MindMaps = () => {
       };
       setEdges((eds) => addEdge(edge, eds));
     },
-    [setEdges]
+    [setEdges, saveToHistory]
   );
 
   const addNode = (shapeType: string = 'rectangle') => {
+    saveToHistory();
     const defaultColor = '#6B7280';
     const newNode: Node = {
       id: nodeIdCounter.toString(),
@@ -244,6 +314,7 @@ const MindMaps = () => {
   };
 
   const updateNodeColor = (nodeId: string, color: string) => {
+    saveToHistory();
     setNodes((nds) =>
       nds.map((node) =>
         node.id === nodeId
@@ -262,6 +333,7 @@ const MindMaps = () => {
     
     const newLabel = prompt('Enter new label:', String(node.data.label || ''));
     if (newLabel !== null) {
+      saveToHistory();
       setNodes((nds) =>
         nds.map((n) =>
           n.id === nodeId
@@ -273,6 +345,7 @@ const MindMaps = () => {
   };
 
   const deleteNode = (nodeId: string) => {
+    saveToHistory();
     setNodes((nds) => nds.filter(node => node.id !== nodeId));
     setEdges((eds) => eds.filter(edge => edge.source !== nodeId && edge.target !== nodeId));
   };
@@ -293,6 +366,7 @@ const MindMaps = () => {
   const onNodeDoubleClick = (event: React.MouseEvent, node: Node) => {
     const newLabel = prompt('Enter new label:', String(node.data.label || ''));
     if (newLabel !== null) {
+      saveToHistory();
       setNodes((nds) =>
         nds.map((n) =>
           n.id === node.id
@@ -324,6 +398,7 @@ const MindMaps = () => {
 
   // Additional helper functions for the new interface
   const clearCanvas = () => {
+    saveToHistory();
     setNodes(initialNodes);
     setEdges([]);
     setNodeIdCounter(2);
@@ -540,6 +615,8 @@ const MindMaps = () => {
                     onZoomOut={zoomOut}
                     onFitView={fitView}
                     onClear={clearCanvas}
+                    onUndo={historyIndex > 0 ? undo : undefined}
+                    onRedo={historyIndex < history.length - 1 ? redo : undefined}
                     selectedTool={selectedTool}
                     onToolSelect={setSelectedTool}
                     showGrid={showGrid}
