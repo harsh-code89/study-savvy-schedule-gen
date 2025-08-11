@@ -18,22 +18,24 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/tasks" element={<Tasks />} />
-          <Route path="/notes" element={<Notes />} />
-          <Route path="/journal" element={<Journal />} />
-          <Route path="/mindmaps" element={<MindMaps />} />
-          <Route path="/planner" element={<Planner />} />
-          <Route path="/subscription" element={<Subscription />} />
-          <Route path="/profile" element={<Profile />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/tasks" element={<Tasks />} />
+            <Route path="/notes" element={<Notes />} />
+            <Route path="/journal" element={<Journal />} />
+            <Route path="/mindmaps" element={<MindMaps />} />
+            <Route path="/planner" element={<Planner />} />
+            <Route path="/subscription" element={<Subscription />} />
+            <Route path="/profile" element={<Profile />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </>
     </TooltipProvider>
   </QueryClientProvider>
 );
