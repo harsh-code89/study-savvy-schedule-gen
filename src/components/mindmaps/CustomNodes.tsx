@@ -162,34 +162,34 @@ export function CustomNode({ data, selected, onEdit, onDelete, onColorChange }: 
   const isSpecialShape = ['diamond', 'triangle', 'star', 'hexagon', 'arrow'].includes(data.shapeType || '');
   
   return (
-    <NodeContextMenu
-      onEdit={() => onEdit(data.nodeId)}
-      onDelete={() => onDelete(data.nodeId)}
-      onColorChange={(color: string) => onColorChange(data.nodeId, color)}
-      currentColor={data.color}
-    >
-      <div className="relative">
-        <Handle 
-          type="target" 
-          position={Position.Top} 
-          className="!bg-gray-400 !border-2 !border-white !w-3 !h-3" 
-        />
-        <Handle 
-          type="source" 
-          position={Position.Bottom} 
-          className="!bg-gray-400 !border-2 !border-white !w-3 !h-3" 
-        />
-        <Handle 
-          type="source" 
-          position={Position.Left} 
-          className="!bg-gray-400 !border-2 !border-white !w-3 !h-3" 
-        />
-        <Handle 
-          type="source" 
-          position={Position.Right} 
-          className="!bg-gray-400 !border-2 !border-white !w-3 !h-3" 
-        />
-        
+    <div className="relative">
+      <Handle 
+        type="target" 
+        position={Position.Top} 
+        className="!bg-gray-400 !border-2 !border-white !w-3 !h-3" 
+      />
+      <Handle 
+        type="source" 
+        position={Position.Bottom} 
+        className="!bg-gray-400 !border-2 !border-white !w-3 !h-3" 
+      />
+      <Handle 
+        type="source" 
+        position={Position.Left} 
+        className="!bg-gray-400 !border-2 !border-white !w-3 !h-3" 
+      />
+      <Handle 
+        type="source" 
+        position={Position.Right} 
+        className="!bg-gray-400 !border-2 !border-white !w-3 !h-3" 
+      />
+      
+      <NodeContextMenu
+        onEdit={() => onEdit(data.nodeId)}
+        onDelete={() => onDelete(data.nodeId)}
+        onColorChange={(color: string) => onColorChange(data.nodeId, color)}
+        currentColor={data.color}
+      >
         <div 
           style={shapeStyles}
           className={`transition-all duration-200 ${
@@ -211,7 +211,7 @@ export function CustomNode({ data, selected, onEdit, onDelete, onColorChange }: 
             {data.label}
           </span>
         </div>
-      </div>
-    </NodeContextMenu>
+      </NodeContextMenu>
+    </div>
   );
 }
