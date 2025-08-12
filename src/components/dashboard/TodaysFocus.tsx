@@ -21,9 +21,9 @@ interface TodaysFocusProps {
 
 export function TodaysFocus({ focusItems, onAddFocus, onToggleComplete }: TodaysFocusProps) {
   const priorityColors = {
-    high: 'bg-destructive text-destructive-foreground',
-    medium: 'bg-warning text-warning-foreground',
-    low: 'bg-muted text-muted-foreground'
+    high: 'bg-priority-high text-priority-high-foreground',
+    medium: 'bg-priority-medium text-priority-medium-foreground',
+    low: 'bg-priority-low text-priority-low-foreground'
   };
 
   const typeIcons = {
@@ -34,81 +34,85 @@ export function TodaysFocus({ focusItems, onAddFocus, onToggleComplete }: Todays
 
   return (
     <Card className="card-enhanced">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
+      <CardHeader className="pb-3 px-4 sm:px-6">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-2">
             <Star className="h-5 w-5 text-warning" />
-            <CardTitle className="text-lg">Today's Focus</CardTitle>
+            <CardTitle className="text-lg sm:text-xl">Today's Focus</CardTitle>
           </div>
           <Button 
             variant="outline" 
             size="sm" 
             onClick={onAddFocus}
-            className="interactive-hover"
+            className="interactive-hover shrink-0"
           >
-            <Plus className="h-4 w-4 mr-1" />
-            Add
+            <Plus className="h-4 w-4 sm:mr-1" />
+            <span className="hidden sm:inline">Add</span>
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-3 p-4 sm:p-6">
         {focusItems.length === 0 ? (
-          <div className="text-center py-6">
+          <div className="text-center py-8 sm:py-12">
             <Star className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-            <p className="text-muted-foreground">No focus items yet</p>
-            <p className="text-sm text-muted-foreground">Add tasks or goals to stay focused</p>
+            <p className="text-muted-foreground font-medium">No focus items yet</p>
+            <p className="text-sm text-muted-foreground mt-1">Add tasks or goals to stay focused</p>
           </div>
         ) : (
-          focusItems.map((item) => {
-            const IconComponent = typeIcons[item.type];
-            return (
-              <div 
-                key={item.id} 
-                className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
-                  item.completed 
-                    ? 'bg-muted/50 opacity-60' 
-                    : 'bg-card hover:bg-muted/30'
-                }`}
-              >
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0 hover:bg-primary/10"
-                  onClick={() => onToggleComplete(item.id)}
+          <div className="space-y-2">
+            {focusItems.map((item) => {
+              const IconComponent = typeIcons[item.type];
+              return (
+                <div 
+                  key={item.id} 
+                  className={`group flex items-center gap-3 p-3 sm:p-4 rounded-lg border transition-all duration-200 ${
+                    item.completed 
+                      ? 'bg-muted/50 opacity-60 border-muted' 
+                      : 'bg-card hover:bg-muted/30 hover:border-muted-foreground/20 hover:shadow-sm'
+                  }`}
                 >
-                  <CheckCircle 
-                    className={`h-5 w-5 ${
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0 hover:bg-primary/10 flex-shrink-0 transition-colors"
+                    onClick={() => onToggleComplete(item.id)}
+                  >
+                    <CheckCircle 
+                      className={`h-5 w-5 transition-colors ${
+                        item.completed 
+                          ? 'text-success fill-success/20' 
+                          : 'text-muted-foreground group-hover:text-primary'
+                      }`} 
+                    />
+                  </Button>
+                  
+                  <IconComponent className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                  
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm font-medium leading-snug ${
                       item.completed 
-                        ? 'text-success fill-success' 
-                        : 'text-muted-foreground'
-                    }`} 
-                  />
-                </Button>
-                
-                <IconComponent className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                
-                <div className="flex-1 min-w-0">
-                  <p className={`text-sm font-medium ${
-                    item.completed ? 'line-through text-muted-foreground' : ''
-                  }`}>
-                    {item.title}
-                  </p>
-                  {item.dueTime && (
-                    <p className="text-xs text-muted-foreground">
-                      Due: {item.dueTime}
+                        ? 'line-through text-muted-foreground' 
+                        : 'text-foreground'
+                    }`}>
+                      {item.title}
                     </p>
-                  )}
+                    {item.dueTime && (
+                      <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        Due: {item.dueTime}
+                      </p>
+                    )}
+                  </div>
+                  
+                  <Badge 
+                    className={`${priorityColors[item.priority]} text-xs font-medium px-2 py-1 rounded-full flex-shrink-0`}
+                  >
+                    {item.priority}
+                  </Badge>
                 </div>
-                
-                <Badge 
-                  variant="secondary" 
-                  className={`${priorityColors[item.priority]} text-xs`}
-                >
-                  {item.priority}
-                </Badge>
-              </div>
-            );
-          })
+              );
+            })}
+          </div>
         )}
       </CardContent>
     </Card>

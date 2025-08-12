@@ -56,6 +56,14 @@
     --warning-foreground: 0 0% 9%;
     --info: 199 89% 48%;
     --info-foreground: 0 0% 100%;
+    
+    /* Priority Colors for Better Contrast */
+    --priority-high: 0 84% 60%;
+    --priority-high-foreground: 0 0% 100%;
+    --priority-medium: 39 77% 58%;
+    --priority-medium-foreground: 0 0% 9%;
+    --priority-low: 220 14% 85%;
+    --priority-low-foreground: 220 9% 46%;
 
     /* Professional Shadows */
     --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
@@ -118,6 +126,14 @@
     --warning-foreground: 0 0% 9%;
     --info: 199 89% 55%;
     --info-foreground: 0 0% 100%;
+    
+    /* Dark Mode Priority Colors for Better Contrast */
+    --priority-high: 0 84% 65%;
+    --priority-high-foreground: 0 0% 100%;
+    --priority-medium: 39 77% 65%;
+    --priority-medium-foreground: 0 0% 9%;
+    --priority-low: 215 28% 25%;
+    --priority-low-foreground: 217 11% 75%;
 
     /* Glass Effect for Dark Mode */
     --glass-bg: rgba(0, 0, 0, 0.2);
@@ -275,19 +291,32 @@
   }
 }
 
-/* Existing styles */
-.gradient-heading {
-  @apply bg-gradient-to-r from-study-primary to-study-secondary bg-clip-text text-transparent;
-}
+  /* Responsive Focus Component */
+  .focus-item-mobile {
+    @apply flex-col items-start gap-2;
+  }
+  
+  .focus-item-desktop {
+    @apply flex-row items-center gap-3;
+  }
+  
+  /* Priority Badge Responsiveness */
+  .priority-badge-mobile {
+    @apply text-xs px-2 py-1 rounded-md;
+  }
+  
+  .priority-badge-desktop {
+    @apply text-xs px-3 py-1 rounded-full;
+  }
 
-.glass-card {
-  @apply bg-white bg-opacity-80 backdrop-filter backdrop-blur-lg border border-white border-opacity-20 shadow-lg;
-}
-
-/* Dark mode glass card variant */
-.dark .glass-card {
-  @apply bg-gray-800 bg-opacity-80 border-gray-700 border-opacity-20;
-}
+  /* Mobile-first responsive cards */
+  .responsive-card-content {
+    @apply p-3 sm:p-4 md:p-6;
+  }
+  
+  .responsive-card-spacing {
+    @apply space-y-2 sm:space-y-3;
+  }
 
 /* Responsive 3D - Disable on mobile for performance */
 @media (max-width: 768px) {
